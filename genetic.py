@@ -29,7 +29,8 @@ def reproduce(parent, NChild, agent, *args):
         else:
             child = agent(args[0])#[0] because args is put inside an extra list when passed from population control
         #splice together to create initial child
-######################need to sort so that doesnt copy half of parent (e.g put into one list, or choose randomly wether s1, s2, b is copied)##################################
+############################reproduce not just for two best?##########################
+######################need to sort so that doesnt copy half of parent (e.g put into one list, or choose randomly whether s1, s2, b is copied)##################################
         for i in range(child.brain.Nhidd):
             for j in range(splitPoint): #copy up to splitting point
                 child.brain.synapses1[:,j] = parent[0].brain.synapses1[:,j] #copy weights from first parent
