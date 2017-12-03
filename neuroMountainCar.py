@@ -42,6 +42,6 @@ x = np.arange(1,maxGenerations+1)
 y = np.mean(scores,1)
 e = np.std(scores,1)
 for i in range(maxGenerations):
-    plt.errorbar(x, max(score[:,i]), yerr=e)
+    plt.errorbar(x, y, yerr=e)
 plt.show()
 
