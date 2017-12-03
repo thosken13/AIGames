@@ -6,12 +6,12 @@ class Brain:
         self.inputL = np.zeros(Nin)
         self.Nhidd = Nhidd
         self.hiddenLayer = np.zeros(Nhidd) #hidden layer neuron values
-        self.biases = np.random.rand(Nhidd)
-        self.synapses1 = np.random.rand(Nin, Nhidd)#weights for synapses between input and hidden layer
+        self.biases = 2*np.random.rand(Nhidd) - 1
+        self.synapses1 = 2*np.random.rand(Nin, Nhidd) - 1 #weights for synapses between input and hidden layer
                                           #first row is from first input, second from second, ...
                                           #first collumn links to first neuron in hidden layer
                                 
-        self.synapses2 = np.abs(np.random.randn(Nhidd, Nout)) #weights for synapses from hidden to output
+        self.synapses2 = 2*np.abs(np.random.rand(Nhidd, Nout)) - 1 #weights for synapses from hidden to output
 
 
     def activationSig(self, vals):
