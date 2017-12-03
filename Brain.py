@@ -6,12 +6,12 @@ class Brain:
         self.inputL = np.zeros(Nin)
         self.Nhidd = Nhidd
         self.hiddenLayer = np.zeros(Nhidd) #hidden layer neuron values
-        self.biases = np.random.randn(Nhidd)
-        self.synapses1 = np.random.randn(Nin, Nhidd)#weights for synapses between input and hidden layer
+        self.biases = np.random.rand(Nhidd)
+        self.synapses1 = np.random.rand(Nin, Nhidd)#weights for synapses between input and hidden layer
                                           #first row is from first input, second from second, ...
                                           #first collumn links to first neuron in hidden layer
                                 
-        self.synapses2 = np.abs(np.transpose(np.random.randn(Nout, Nhidd))) #weights for synapses from hidden to output
+        self.synapses2 = np.abs(np.random.randn(Nhidd, Nout)) #weights for synapses from hidden to output
 
 
     def activationSig(self, vals):
@@ -31,7 +31,8 @@ class Brain:
     def calculate(self):
         "calculates output of neural net"
         self.hiddenLayer = np.dot(self.inputL, self.synapses1)+self.biases #initial values of hidden layer before activation
-        self.hiddenLayer = self.activationRELU(self.hiddenLayer) #hidden layer values after applying activation function
+        print("hidden = ", self.hiddenLayer)
+        self.hiddenLayer = self.activationSig(self.hiddenLayer) #hidden layer values after applying activation function
         ######################add softmax for output#################################
         return np.dot(self.hiddenLayer, self.synapses2)/self.Nhidd 
 
