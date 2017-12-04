@@ -4,7 +4,7 @@ class QLearnTabular:
     def __init__(self, nStates, environment, alpha, gamma, deps):
         self.nStates = nStates #number of states per observation per action
         self.env = environment
-        self.epsilon = 1
+        self.epsilon = 0.02
         self.deps = deps
         self.alpha = alpha
         self.gamma = gamma
@@ -17,6 +17,7 @@ class QLearnTabular:
         for d in range(dim):
             shape.append(nStates)
         self.qTable = np.zeros(shape)
+        self.visited = np.zeros(shape)################################
 
         self.score = 0
 
@@ -48,7 +49,7 @@ class QLearnTabular:
                                                                              self.alpha*(reward + self.gamma*np.max(self.qTable[:, s[0], s[1]]))
 
         self.score+=reward
-        self.epsilon += self.deps
+        #self.epsilon += self.deps
 
     def reset(self):
         self.score=0
