@@ -29,7 +29,7 @@ class QLearnTabular:
         envStep = (envMax - envMin)/self.nStates
         s = []
         for i in range(np.shape(observation)[0]):
-            s.append((observation[i] - envMin[i])/envStep[i])
+            s.append(int((observation[i] - envMin[i])/envStep[i]))
         self.prevState = s
         return s
 
@@ -52,6 +52,7 @@ class QLearnTabular:
         s = self.discretiseState(observation)
         sPrev = self.prevState
         sPrev.append(self.prevAction)
+        print(sPrev)
         self.qTable[tuple(sPrev)] = (1 - self.alpha)*self.qTable[tuple(sPrev)] + self.alpha*(reward + self.gamma*np.max(self.qTable[tuple(s)]))
 
         self.score+=reward
