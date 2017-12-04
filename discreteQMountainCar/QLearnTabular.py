@@ -50,6 +50,8 @@ class QLearnTabular:
         self.score+=reward
         self.epsilon += self.deps
 
+    def reset(self):
+        self.score=0
 
 
 
