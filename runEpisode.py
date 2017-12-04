@@ -1,7 +1,7 @@
 import gym
 import numpy as np
 
-def play(env, agent):
+def play(env, agent, render):
     #print(env.action_space)
     #print(env.observation_space)
     observation = env.reset()
@@ -15,7 +15,8 @@ def play(env, agent):
         #print(action)
         observation, reward, done, info = env.step(action)
         agent.update(reward, observation)
-        #env.render()
+        if render:
+            env.render()
         if done and t !=199:
             print("Episode finished after {} timesteps".format(t+1))
         t+=1
