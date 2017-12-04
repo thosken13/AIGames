@@ -10,8 +10,8 @@ def play(env, agent):
     t=0
     while not done:
         #print("observation = ", observation)
-        #action = env.action_space.sample()
-        action = agent.action(observation)
+        action = env.action_space.sample()
+        #action = agent.action(observation)
         #print(action)
         observation, reward, done, info = env.step(action)
         agent.update(reward, observation)
