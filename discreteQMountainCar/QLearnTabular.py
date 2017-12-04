@@ -9,7 +9,7 @@ class QLearnTabular:
         self.alpha = alpha
         self.gamma = gamma
         self.prevState = 0
-        self.prevAction = -9
+        self.prevAction = 0
 
         dim = self.env.observation_space.shape[0]
         shape = []
@@ -34,7 +34,10 @@ class QLearnTabular:
 
     def action(self, observation):
         "choose an action based off observation"
-        if np.random.rand() < self.epsilon:
+        s = self.discretiseState(observation)
+        if np.any(self.qTable[:, s[0],s[1]] == 0):
+            self.prevAction = np.argmin(self.qTable[:, s[0], s[1]])
+        elif np.random.rand() < self.epsilon:
             self.prevAction = self.env.action_space.sample()
         else:
             s = self.discretiseState(observation)

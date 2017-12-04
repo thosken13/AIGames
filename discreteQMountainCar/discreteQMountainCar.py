@@ -19,7 +19,9 @@ y = []
 environment = gym.make('MountainCar-v0')
 driver = QLearnTabular.QLearnTabular(nStates, environment, alpha, gamma, deps)
 
-for i in range(maxIter):
+print("Start")
+#for i in range(maxIter):
+while True:
     mountainCar.play(environment, driver)
     y.append(driver.score)
     driver.reset()
