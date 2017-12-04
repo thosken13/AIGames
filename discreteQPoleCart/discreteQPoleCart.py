@@ -20,11 +20,10 @@ environment = gym.make('CartPole-v0')
 agent = QLearnTabular.QLearnTabular(nStates, environment, alpha, gamma, deps)
 
 print("Start")
-#for i in range(maxIter):
-while True:
+for i in range(maxIter):
     runEpisode.play(environment, agent, True)
     y.append(agent.score)
-    driver.reset()
+    agent.reset()
     alph = max(alpha * (0.85 ** (i//100)), minAlpha)
     agent.alpha = alph
 
