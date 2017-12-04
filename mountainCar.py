@@ -1,7 +1,7 @@
 import gym
 import numpy as np
 
-def play(agent):
+def play(env, agent):
     env = gym.make('MountainCar-v0')
     #print(env.action_space)
     #print(env.observation_space)
@@ -13,7 +13,7 @@ def play(agent):
         #print("observation = ", observation)
         #action = env.action_space.sample()
         action = agent.action(observation)
-        #print(action)
+        print(action)
         observation, reward, done, info = env.step(action)
         agent.update(reward, observation)
         #env.render()
