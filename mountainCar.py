@@ -16,9 +16,9 @@ def play(agent):
         #print(action)
         observation, reward, done, info = env.step(action)
         agent.update(reward, observation)
-        env.render()
+        #env.render()
         if done:
             #print("Episode finished after {} timesteps".format(t+1))
-            env.render()
+            #env.render()
             break
         t+=1

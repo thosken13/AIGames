@@ -23,11 +23,11 @@ def reproduce(parent, NChild, agent, *args):
     "produces NChildren number of children from the two parents and mutates"
     children = [0]*NChild
     for c in range(NChild):
-        splitPoint = np.random.randint(1, parent[0].brain.Nhidd)
+        splitPoint = np.random.randint(1, parent[0].brain.Nhidd-1)
         if len(args)==0:
             child = agent()
         else:
-            child = agent(args[0])#[0] because args is put inside an extra list when passed from population control
+            child = agent(args[0]) # [0] because args is put inside an extra list when passed from population control
         #splice together to create initial child
 ############################reproduce not just for two best?##########################
 ######################need to sort so that doesnt copy half of parent (e.g put into one list, or choose randomly whether s1, s2, b is copied)##################################
@@ -38,7 +38,7 @@ def reproduce(parent, NChild, agent, *args):
                 child.brain.biases[j] = parent[0].brain.biases[j]
             for k in range(splitPoint, child.brain.Nhidd): #copy from splitting point
                 child.brain.synapses1[:,k] = parent[1].brain.synapses1[:,k] #copy weights from second parent
-                child.brain.synapses2[:,k] = parent[1].brain.synapses2[:,k] #copy weights from second parent
+                child.brain.synapses2[k,:] = parent[1].brain.synapses2[k,:] #copy weights from second parent
                 child.brain.biases[k] = parent[1].brain.biases[k]
         NMutations = int(mutationsFrac*child.brain.Nhidd)+1 #int rounds down, dont want too low so +1
         children[c] = copy.deepcopy(child)#####################
@@ -54,11 +54,11 @@ def reproduce(parent, NChild, agent, *args):
 
             r3 = np.random.randint(child.brain.Nhidd)
             magnitude = 2*np.random.randint(2) - 1
-            children[c].brain.synapses2[0,r3] += mutationSize*magnitude
+            children[c].brain.synapses2[r3,0] += mutationSize*magnitude
 
             r4 = np.random.randint(child.brain.Nhidd)
             magnitude = 2*np.random.randint(2) - 1
-            children[c].brain.synapses2[1,r4] += mutationSize*magnitude
+            children[c].brain.synapses2[r4,1] += mutationSize*magnitude
   
             r5 = np.random.randint(child.brain.Nhidd)
             magnitude = 2*np.random.randint(2) - 1

@@ -31,7 +31,7 @@ class Brain:
     def calculate(self):
         "calculates output of neural net"
         self.hiddenLayer = np.dot(self.inputL, self.synapses1)+self.biases #initial values of hidden layer before activation
-        print("hidden = ", self.hiddenLayer)
+        #print("hidden = ", self.hiddenLayer)
         self.hiddenLayer = self.activationSig(self.hiddenLayer) #hidden layer values after applying activation function
         ######################add softmax for output#################################
         return np.dot(self.hiddenLayer, self.synapses2)/self.Nhidd 
