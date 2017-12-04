@@ -52,9 +52,7 @@ class QLearnTabular:
         s = self.discretiseState(observation)
         sPrev = self.prevState
         sPrev.append(self.prevAction)
-        print(sPrev)
         self.qTable[tuple(sPrev)] = (1 - self.alpha)*self.qTable[tuple(sPrev)] + self.alpha*(reward + self.gamma*np.max(self.qTable[tuple(s)]))
-
         self.score+=reward
         #self.epsilon += self.deps
 
