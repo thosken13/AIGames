@@ -17,6 +17,6 @@ def play(env, agent, render):
         agent.update(reward, observation)
         if render:
             env.render()
-        if done:# and t !=199:
-            print("Episode finished after {} timesteps".format(t+1))
         t+=1
+    print("Episode finished after {} timesteps".format(t))
+    return t
