@@ -17,7 +17,7 @@ epsilon = 1
 mineps = 0.01
 
 x = np.arange(maxIter)
-y = []
+yscores = []
 yeps = []
 yalpha = []
 
@@ -26,14 +26,10 @@ agent = QLearnTabular.QLearnTabular(nStates, environment, alpha, gamma, epsilon)
 streak = 0
 for i in range(maxIter):
     t = runEpisode.play(environment, agent, False)
-    if t >= 195:
-        streak += 1
-        if streak == 100:
+    yscores.append(agent.score)
+    if i+1 >= 100:
+        if sum(yscores[-100:])/100 >= 195:
             print("Solved after {} episodes!".format(i+1))
-            break
-    else:
-        streak = 0
-    y.append(agent.score)
     agent.reset()
     agent.alpha = max(alpha * (0.85 ** (i//100)), minAlpha)
     yalpha.append(agent.alpha)
@@ -42,7 +38,7 @@ for i in range(maxIter):
 
 runEpisode.play(environment, agent, True)
 
-data = {"score": y}
+data = {"score": yscores}
 df = pd.DataFrame(data)
 df.rolling(window=int(maxIter/500)).mean()
 plt.subplot(3,1,1)
