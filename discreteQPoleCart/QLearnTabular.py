@@ -27,40 +27,32 @@ class QLearnTabular:
         "discretise the observations so that can use q-learning in tabular form"
         envMin = self.env.observation_space.low
         envMin[1] = -2.5
-        envMin[3] = -3.3#math.radians(50)
+        envMin[3] = -3.3
         envMax = self.env.observation_space.high
         envMax[1] = 2.5
-        envMax[3] = 3.3#math.radians(50)
+        envMax[3] = 3.3
         envStep = (envMax - envMin)/self.nStates
-        #envStep[1] = round(envStep[1],2)
-        #print("min, max, step", envMin, envMax, envStep)
         s = []
         for i in range(np.shape(observation)[0]): 
             s_ = int((observation[i] - envMin[i])/envStep[i])
             if s_ <0:
                 s.append(0)
-                print("underflow at", i, observation[i])
+                print("underflow at {}, value of {}".format(i, observation[i]))
             elif s_ < self.nStates:
                 s.append(s_)
             else:
                 s.append(self.nStates-1)
-                print("overflow at", i, observation[i])
+                print("overflow at {}, value of {}".format(i, observation[i]))
         self.prevState = s
-        #print("obs",observation)
-        #print("state", s)
         return s
 
     def action(self, observation):
-        "choose an action based off observation"
+        "choose an action based off Q-Values"
         s = self.discretiseState(observation)
-        #if np.any(self.qTable[:, s[0],s[1]] == 0):
-         #   self.prevAction = np.argmin(self.qTable[s])
         if np.random.rand() < self.epsilon:
             self.prevAction = self.env.action_space.sample()
-            #print("epsilon ", self.epsilon)
         else:
             self.prevAction = np.argmax(self.qTable[tuple(s)])
-            #print(self.qTable[tuple(s)])
         return self.prevAction
             
 
