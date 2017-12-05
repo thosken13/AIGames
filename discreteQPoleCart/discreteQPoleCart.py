@@ -30,6 +30,7 @@ for i in range(maxIter):
     if i+1 >= 100:
         if sum(yscores[-100:])/100 >= 195:
             print("Solved after {} episodes!".format(i+1))
+            break
     agent.reset()
     agent.alpha = max(alpha * (0.85 ** (i//100)), minAlpha)
     yalpha.append(agent.alpha)
