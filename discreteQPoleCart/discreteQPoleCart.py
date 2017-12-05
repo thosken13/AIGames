@@ -23,9 +23,16 @@ yalpha = []
 
 environment = gym.make('CartPole-v0')
 agent = QLearnTabular.QLearnTabular(nStates, environment, alpha, gamma, epsilon)
-
+streak = 0
 for i in range(maxIter):
-    runEpisode.play(environment, agent, False)
+    t = runEpisode.play(environment, agent, False)
+    if t >= 195:
+        streak += 1
+        if streak == 100:
+            print("Solved after {} episodes!".format(i+1))
+            break
+    else:
+        streak = 0
     y.append(agent.score)
     agent.reset()
     agent.alpha = max(alpha * (0.85 ** (i//100)), minAlpha)
