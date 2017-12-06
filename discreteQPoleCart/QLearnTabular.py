@@ -22,7 +22,6 @@ class QLearnTabular:
 
         self.score = 0
 
-    
     def discretiseState(self, observation):
         "discretise the observations so that can use q-learning in tabular form"
         envMin = self.env.observation_space.low
@@ -55,7 +54,6 @@ class QLearnTabular:
             self.prevAction = np.argmax(self.qTable[tuple(s)])
         return self.prevAction
             
-
     def update(self, reward, observation):
         "update the Q value table"
         sPrev = self.prevState
