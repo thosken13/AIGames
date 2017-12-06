@@ -11,6 +11,7 @@ class QLearnTabular:
         self.gamma = gamma
         self.prevState = 0
         self.prevAction = 0
+        self.score = 0
 
         dim = self.env.observation_space.shape[0]
         shape = []
@@ -18,9 +19,9 @@ class QLearnTabular:
             shape.append(nStates)
         shape.append(self.env.action_space.shape[0])
         self.qTable = np.zeros(shape)
-        self.visited = np.zeros(shape)################################
 
-        self.score = 0
+        self.experiences = []
+
 
     def discretiseState(self, observation):
         "discretise the observations so that can use q-learning in tabular form"
@@ -54,6 +55,14 @@ class QLearnTabular:
             self.prevAction = np.argmax(self.qTable[tuple(s)])
         return self.prevAction
             
+    def experienceReplay(self, stateAction, reward, nextState):
+        "build memory of experiences to help speed up learning by sampling from the memory"
+        e = (stateAction, reward, nextState)
+        self.experiences.append(e)
+        for i in range(min(100 , len(self.experiences))):           #CAN CHANGE NUMBER OF EXPERIENCES TO LEARN FROM
+            e_ = self.experiences[np.random.randint(0, len(self.experiences))]
+            self.qTable[tuple(e_[0])] = (1 - self.alpha)*self.qTable[tuple(e_[0])] + self.alpha*(e_[1] + self.gamma*np.max(self.qTable[tuple(e_[2])]))
+
     def update(self, reward, observation):
         "update the Q value table"
         sPrev = self.prevState
@@ -61,6 +70,7 @@ class QLearnTabular:
         s = self.discretiseState(observation)
         self.qTable[tuple(sPrev)] = (1 - self.alpha)*self.qTable[tuple(sPrev)] + self.alpha*(reward + self.gamma*np.max(self.qTable[tuple(s)]))
         self.score+=reward
+        self.experienceReplay(sPrev, reward, s)
 
     def reset(self):
         self.score=0
