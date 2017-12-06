@@ -40,7 +40,7 @@ for i in range(maxIter):
     agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
     agent.epsilon = max(min(1, 1.0 - math.log10((i+1)/epsilonRate)), mineps)
     if i%20 == 0:
-        print("Episode Number".format(i))
+        print("Episode Number {}".format(i))
 
 runEpisode.play(environment, agent, True)
 
