@@ -35,7 +35,7 @@ for i in range(maxIter):
             print("Solved after {} episodes!".format(i+1))
             break
     agent.reset()
-    agent.alpha = max(alpha * (0.85 ** (i//100)), minAlpha)
+    agent.alpha = max(alpha * (0.85 ** (i//80)), minAlpha)
     agent.epsilon = max(min(1, 1.0 - math.log10((i+1)/50)), mineps)
 
 runEpisode.play(environment, agent, True)
@@ -46,6 +46,8 @@ plt.subplot(3,1,1)
 plt.plot(x, df.rolling(window=int(maxIter/500)).mean(), "x")
 plt.subplot(3,1,2)
 plt.plot(x, yeps)
+plt.ylim((0,1))
 plt.subplot(3,1,3)
 plt.plot(x, yalpha)
+plt.ylim((0,1))
 plt.show()
