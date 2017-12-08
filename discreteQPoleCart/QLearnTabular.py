@@ -21,15 +21,16 @@ class QLearnTabular:
         self.qTable = np.zeros(shape)
 
         self.experiences = []
+        self.visited = np.zeros(shape)
 
 
     def discretiseState(self, observation):
         "discretise the observations so that can use q-learning in tabular form"
         envMin = self.env.observation_space.low
-        envMin[1] = -2.5
+        envMin[1] = -3.4  #-2.5
         envMin[3] = -3.3
         envMax = self.env.observation_space.high
-        envMax[1] = 2.5
+        envMax[1] = 3.4   #2.5
         envMax[3] = 3.3
         envStep = (envMax - envMin)/self.nStates
         s = []
@@ -59,18 +60,28 @@ class QLearnTabular:
         "build memory of experiences to help speed up learning by sampling from the memory"
         e = (stateAction, reward, nextState)
         self.experiences.append(e)
+        if len(self.experiences) == 2000:      #CAN CHANGE SIZE OF MEMORY
+            del self.experiences[0]
         for i in range(min(100 , len(self.experiences))):           #CAN CHANGE NUMBER OF EXPERIENCES TO LEARN FROM
             e_ = self.experiences[np.random.randint(0, len(self.experiences))]
             self.qTable[tuple(e_[0])] = (1 - self.alpha)*self.qTable[tuple(e_[0])] + self.alpha*(e_[1] + self.gamma*np.max(self.qTable[tuple(e_[2])]))
+      #############what learning rate for experience?###################
+
+    def frequencyLearningRate(self, sPrev):
+        "have a learning rate proportional to frequency"
+        self.visited[tuple(sPrev)] += 1
+        self.alpha = 1/self.visited[tuple(sPrev)]
+        
 
     def update(self, reward, observation):
         "update the Q value table"
         sPrev = self.prevState
         sPrev.append(self.prevAction)
         s = self.discretiseState(observation)
+        self.frequencyLearningRate(sPrev)
         self.qTable[tuple(sPrev)] = (1 - self.alpha)*self.qTable[tuple(sPrev)] + self.alpha*(reward + self.gamma*np.max(self.qTable[tuple(s)]))
         self.score+=reward
-        self.experienceReplay(sPrev, reward, s)
+        #self.experienceReplay(sPrev, reward, s)
 
     def reset(self):
         self.score=0
