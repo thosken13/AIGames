@@ -15,7 +15,7 @@ class QLearnTabular:
 
         dim = self.env.observation_space.shape[0]
         shape = []
-        for d in range(dim):
+        for d in range(3):#dim):
             shape.append(nStates)
         shape.append(self.env.action_space.shape[0])
         self.qTable = np.zeros(shape)
@@ -34,7 +34,7 @@ class QLearnTabular:
         envMax[3] = 3.3
         envStep = (envMax - envMin)/self.nStates
         s = []
-        for i in range(np.shape(observation)[0]): 
+        for i in [0,2,3]:#range(np.shape(observation)[0]): 
             s_ = int((observation[i] - envMin[i])/envStep[i])
             if s_ <0:
                 s.append(0)
@@ -78,7 +78,7 @@ class QLearnTabular:
         sPrev = self.prevState
         sPrev.append(self.prevAction)
         s = self.discretiseState(observation)
-        self.frequencyLearningRate(sPrev)
+        #self.frequencyLearningRate(sPrev)
         self.qTable[tuple(sPrev)] = (1 - self.alpha)*self.qTable[tuple(sPrev)] + self.alpha*(reward + self.gamma*np.max(self.qTable[tuple(s)]))
         self.score+=reward
         #self.experienceReplay(sPrev, reward, s)
