@@ -8,16 +8,16 @@ import numpy as np
 import pandas as pd
 import math
 
-maxIter = 1000
-nStates=8         #best:8 solved 460
-alpha = 1         #best:1 solved 460
-minAlpha = 0.05   #best:0.05 solved 460
-alphaRate = 40    #best:40 solved 460
+maxIter = 1000                         #with no cart velocity          with experience replay
+nStates=8         #best:8 solved 460          8  188
+alpha = 1         #best:1 solved 460  
+minAlpha = 0.05   #best:0.05 solved 460                              0.01   523
+alphaRate = 40    #best:40 solved 460                                20     523
 gamma = 1         #best:1 solved 460
 epsilon = 1       #best:1 solved 460
-mineps = 0.01     #best:0.01 solved 460
-epsilonRate = 40  #best:40 solved 460
-##################try learning rate proportional to number of visits to state-action#############################
+mineps = 0.01     #best:0.01 solved 460       0.01 188
+epsilonRate = 12  #best:40 solved 460         12   188                   35     523
+
 x = []
 yscores = []
 yeps = []
@@ -37,8 +37,9 @@ for i in range(maxIter):
             print("Solved after {} episodes!".format(i+1))
             break
     agent.reset()
-    agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
-    agent.epsilon = max(min(1, 1.0 - math.log10((i+1)/epsilonRate)), mineps)
+    #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
+    agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
+    agent.alpha = agent.epsilon   #best: solved 452
     if i%20 == 0:
         print("Episode Number {}".format(i))
 
