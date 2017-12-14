@@ -2,15 +2,18 @@ import numpy as np
 import math
 
 
-class QLearnTabular:
-    def __init__(self, nStates, environment, alpha, gamma, epsilon):
+class SARSALambdaTabular:
+    def __init__(self, nStates, environment, alpha, gamma, epsilon, lambd):
         self.nStates = nStates #number of states per observation per action
         self.env = environment
         self.epsilon = epsilon
         self.alpha = alpha
         self.gamma = gamma
+        self.lambd = lambd
         self.prevState = 0
         self.prevAction = 0
+        self.prevreward = 0
+        self.prevPrevStateAction = 0
         self.score = 0
 
         dim = self.env.observation_space.shape[0]
@@ -19,9 +22,7 @@ class QLearnTabular:
             shape.append(nStates)
         shape.append(self.env.action_space.shape[0])
         self.qTable = np.zeros(shape)
-
-        self.experiences = []
-        self.visited = np.zeros(shape)
+        self.eligibilityTrace = np.zeros(shape)
 
 
     def discretiseState(self, observation):
@@ -54,15 +55,20 @@ class QLearnTabular:
             self.prevAction = self.env.action_space.sample()
         else:
             self.prevAction = np.argmax(self.qTable[tuple(s)])
-        return self.prevAction
+        return self.prevAction        
 
     def update(self, reward, observation):
         "update the Q value table"
         sPrev = self.prevState
         sPrev.append(self.prevAction)
-        s = self.discretiseState(observation)
-        self.qTable[tuple(sPrev)] = (1 - self.alpha)*self.qTable[tuple(sPrev)] + self.alpha*(reward + self.gamma*np.max(self.qTable[tuple(s)]))
+        self.eligibilityTrace[tuple(sPrev)] += 1
+        if self.score != 0: #can't update on first step because don't have prevPrevStateAction
+            delta = self.prevReward + self.gamma*self.qTable[tuple(sPrev)] - self.qTable[tuple(self.prevPrevStateAction)]
+            self.qTable += self.alpha*delta*self.eligibilityTrace
+        self.eligibilityTrace = self.lambd*self.gamma*self.eligibilityTrace
         self.score+=reward
+        self.prevPrevStateAction = sPrev
+        self.prevReward = reward
 
     def reset(self):
         self.score=0

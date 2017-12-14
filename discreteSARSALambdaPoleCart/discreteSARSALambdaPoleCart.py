@@ -12,11 +12,12 @@ maxIter = 1000
 nStates=8 
 alpha = 1 
 minAlpha = 0.05 
-alphaRate = 40   
+alphaRate = 35  
 gamma = 1       
 epsilon = 1     
 mineps = 0.01   
-epsilonRate = 12  
+epsilonRate = 30
+lambd = 0.1
 
 x = []
 yscores = []
@@ -24,7 +25,7 @@ yeps = []
 yalpha = []
 
 environment = gym.make('CartPole-v0')
-agent = QLearnTabular.QLearnTabular(nStates, environment, alpha, gamma, epsilon)
+agent = SARSALambdaTabular.SARSALambdaTabular(nStates, environment, alpha, gamma, epsilon, lambd)
 streak = 0
 for i in range(maxIter):
     t = runEpisode.play(environment, agent, False)
@@ -37,9 +38,9 @@ for i in range(maxIter):
             print("Solved after {} episodes!".format(i+1))
             break
     agent.reset()
-    #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
+    agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
     agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
-    agent.alpha = agent.epsilon   #best: solved 452
+    #agent.alpha = agent.epsilon
     if i%20 == 0:
         print("Episode Number {}".format(i))
 
