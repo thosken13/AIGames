@@ -16,7 +16,7 @@ alphaRate = 40
 gamma = 1       
 epsilon = 1     
 mineps = 0.01   
-epsilonRate = 12  
+epsilonRate = 14  
 lambd = 0.3
 
 x = []
