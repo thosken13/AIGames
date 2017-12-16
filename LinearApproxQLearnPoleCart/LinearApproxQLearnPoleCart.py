@@ -8,15 +8,14 @@ import numpy as np
 import pandas as pd
 import math
 
-maxIter = 1000            
-nStates=8 
+maxIter = 1000
 alpha = 1 
 minAlpha = 0.05 
 alphaRate = 35  
 gamma = 1       
 epsilon = 1     
 mineps = 0.01   
-epsilonRate = 30
+epsilonRate = 50
 
 x = []
 yscores = []
@@ -24,7 +23,7 @@ yeps = []
 yalpha = []
 
 environment = gym.make('CartPole-v0')
-agent = QLinear.QLinear(nStates, environment, alpha, gamma, epsilon)
+agent = QLinear.QLinear(environment, alpha, gamma, epsilon)
 streak = 0
 for i in range(maxIter):
     t = runEpisode.play(environment, agent, False)
@@ -39,7 +38,7 @@ for i in range(maxIter):
     agent.reset()
     agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
     agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
-    #agent.alpha = agent.epsilon
+    agent.alpha = agent.epsilon
     if i%20 == 0:
         print("Episode Number {}".format(i))
 
