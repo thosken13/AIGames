@@ -1,22 +1,22 @@
 import gym
 import QLearnTabular
 import sys
-sys.path.append('../../')
+sys.path.append('../')
 import runEpisode
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import math
 
-maxIter = 1000                         #with no cart velocity          with experience replay
-nStates=8         #best:8 solved 460          8  188
-alpha = 1         #best:1 solved 460  
-minAlpha = 0.05   #best:0.05 solved 460                              0.01   523
-alphaRate = 40    #best:40 solved 460                                20     523
-gamma = 1         #best:1 solved 460
-epsilon = 1       #best:1 solved 460
-mineps = 0.01     #best:0.01 solved 460       0.01 188
-epsilonRate = 12  #best:40 solved 460         12   188                   35     523
+maxIter = 1000    
+nStates=8         
+alpha = 1         
+minAlpha = 0.05   
+alphaRate = 40    
+gamma = 0.9        
+epsilon = 1       
+mineps = 0.01    
+epsilonRate = 55  
 
 x = []
 yscores = []
@@ -27,7 +27,7 @@ environment = gym.make('LunarLander-v2')
 agent = QLearnTabular.QLearnTabular(nStates, environment, alpha, gamma, epsilon)
 streak = 0
 for i in range(maxIter):
-    t = runEpisode.play(environment, agent, True)
+    t = runEpisode.play(environment, agent, False)
     x.append(i+1)
     yscores.append(agent.score)
     yalpha.append(agent.alpha)
@@ -39,7 +39,7 @@ for i in range(maxIter):
     agent.reset()
     #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
     agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
-    agent.alpha = agent.epsilon   #best: solved 452
+    agent.alpha = agent.epsilon  
     if i%20 == 0:
         print("Episode Number {}".format(i))
 

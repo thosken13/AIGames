@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../../../')
 import gym
 import numpy as np
 
@@ -15,6 +17,10 @@ def play(env, agent, render):
         #print(action)
         observation, reward, done, info = env.step(action)
         agent.update(reward, observation)
+        if reward >= 100:
+            print("Landed!")
+        if reward == 10:
+            print("Leg-ground contact")
         if render:
             env.render()
         t+=1
