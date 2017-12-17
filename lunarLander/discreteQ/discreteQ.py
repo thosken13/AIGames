@@ -8,15 +8,15 @@ import numpy as np
 import pandas as pd
 import math
 
-maxIter = 1000    
+maxIter = 10000    
 nStates=8         
 alpha = 1         
 minAlpha = 0.05   
 alphaRate = 40    
-gamma = 0.9        
+gamma = 0.98        
 epsilon = 1       
 mineps = 0.01    
-epsilonRate = 55  
+epsilonRate = 700  
 
 x = []
 yscores = []

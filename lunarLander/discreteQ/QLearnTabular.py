@@ -27,24 +27,25 @@ class QLearnTabular:
     def discretiseState(self, observation):
         "discretise the observations so that can use q-learning in tabular form"
         envMin = self.env.observation_space.low
-        envMin[0] = -0.5
-        envMin[1] = -1
-        envMin[2] = -0.4
-        envMin[3] = -1.5
-        envMin[4] = -1
-        envMin[5] = -1.6
+        envMin[0] = -1
+        envMin[1] = -1.1
+        envMin[2] = -1.5
+        envMin[3] = -1.51
+        envMin[4] = -2.5
+        envMin[5] = -5
         envMin[6] = 0.0
         envMin[7] = 0.0
         envMax = self.env.observation_space.high
-        envMax[0] = -envMax[0]
-        envMax[1] = -envMax[1]
-        envMax[2] = -envMax[2]
-        envMax[3] = -envMax[0]
-        envMax[4] = -envMax[0]
-        envMax[5] = -envMax[0]
+        envMax[0] = -envMin[0]
+        envMax[1] = -envMin[1]
+        envMax[2] = -envMin[2]
+        envMax[3] = -envMin[3]
+        envMax[4] = -envMin[4]
+        envMax[5] = -envMin[5]
         envMax[6] = 1.1
         envMax[7] = 1.1
         envStep = (envMax - envMin)/self.nStates
+        #print(envMax, envMin, envStep)
         s = []
         for i in range(np.shape(observation)[0]): 
             s_ = int((observation[i] - envMin[i])/envStep[i])
