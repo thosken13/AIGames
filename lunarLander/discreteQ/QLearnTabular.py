@@ -41,7 +41,7 @@ class QLearnTabular:
         self.envMax[6] = 1.1
         self.envMax[7] = 1.1
         self.envStep = (self.envMax - self.envMin)/self.nStates
-
+#################### could tweak state min max more (find range around good position) ##################################
 
     def discretiseState(self, observation):
         "discretise the observations so that can use q-learning in tabular form"
