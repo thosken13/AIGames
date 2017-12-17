@@ -8,14 +8,14 @@ import numpy as np
 import pandas as pd
 import math
 
-maxIter = 8000
-alpha = 1 
+maxIter = 60000
+alpha = 0.01 ##########################
 minAlpha = 0.05 
 alphaRate = 35  
-gamma = 1       
+gamma = 0.98     
 epsilon = 1     
 mineps = 0.01   
-epsilonRate = 500
+epsilonRate = 5000
 
 x = []
 yscores = []
@@ -38,7 +38,7 @@ for i in range(maxIter):
     agent.reset()
     #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
     agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
-    agent.alpha = agent.epsilon
+    #agent.alpha = agent.epsilon
     if i%20 == 0:
         print("Episode Number {}".format(i))
 
