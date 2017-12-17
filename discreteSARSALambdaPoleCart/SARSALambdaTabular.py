@@ -23,20 +23,22 @@ class SARSALambdaTabular:
         shape.append(self.env.action_space.shape[0])
         self.qTable = np.zeros(shape)
         self.eligibilityTrace = np.zeros(shape)
+        
+        self.envMin = self.env.observation_space.low
+        self.envMin[1] = -3.4  #-2.5
+        self.envMin[3] = -3.3
+        self.envMax = self.env.observation_space.high
+        self.envMax[1] = 3.4   #2.5
+        self.envMax[3] = 3.3
+        self.envStep = (self.envMax - self.envMin)/self.nStates
+        
 
 
     def discretiseState(self, observation):
         "discretise the observations so that can use q-learning in tabular form"
-        envMin = self.env.observation_space.low
-        envMin[1] = -3.4  #-2.5
-        envMin[3] = -3.3
-        envMax = self.env.observation_space.high
-        envMax[1] = 3.4   #2.5
-        envMax[3] = 3.3
-        envStep = (envMax - envMin)/self.nStates
         s = []
         for i in [0,2,3]:#range(np.shape(observation)[0]): 
-            s_ = int((observation[i] - envMin[i])/envStep[i])
+            s_ = int((observation[i] - self.envMin[i])/self.envStep[i])
             if s_ <0:
                 s.append(0)
                 print("underflow at {}, value of {}".format(i, observation[i]))
