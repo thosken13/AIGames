@@ -14,8 +14,8 @@ class dqn:
         self.features = self.env.observation_space.shape[0]
         self.experience = []
         self.batchSize = batchSize
-        net1 = self.buildModel(hiddenNodes) # 2 nets to alternate between for stability
-        net2 = self.buildModel(hiddenNodes)
+        self.netDict1 = self.buildModel(hiddenNodes) # 2 nets to alternate between for stability
+        self.netDict2 = self.buildModel(hiddenNodes)
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"
@@ -32,27 +32,32 @@ class dqn:
             putptBiases = tf.Variable(tf.random_normal(shape=[hiddenNodes, self.actions]))
             #computational graph
             hidd1 = tf.nn.leaky_relu(tf.add(tf.matmul(inpt, hidd1Weights), hidd1Biases))
-            hidd2 = tf.nn.leaky_relu(tf.add(tf.matmul(hidd1, hidd2Weights), hidd2Biases))
-            "unsure about softmax"outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases))    
-        return g
+            keepProb = tf.placeholder('float')
+            hidd1DropOut = tf.nn.dropout(hidd1, keepProb)
+            hidd2 = tf.nn.leaky_relu(tf.add(tf.matmul(hidd1DropOut, hidd2Weights), hidd2Biases))
+            "unsure about softmax"outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases))
+        netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb}
+        return netDict
         
-    def qApproxNet(self, observation, graph):
+    def qApproxNet(self, observation, netDict):
         "calculates approximation for Q values for all actions at state"
-        with tf.Session(graph=graph) as sess:
-            qVals = sess.run(outpt, feed_dict={inpt: observation}) #self.outpt????
+        with tf.Session(graph=netDict["graph"]) as sess:
+            qVals = sess.run(netDict["out"], feed_dict={netDict["in"]: observation, netDict["keepProb"]: 1})
         return qVals
     
-    def action(self, observation):
+    def action(self, observation, netDict):
         "chooses an action given observation"
         if np.random.rand() < self.epsilon:
             self.prevAction = self.env.action_space.sample()
         else:
-            self.prevAction = np.argmax(qApproxNet(observation))
+            self.prevAction = np.argmax(qApproxNet(observation, netDict))
         return self.prevAction
     
-    def train(self, graphTrain, graphEval):
+    def train(self, trainDict, evalDict, keepProb):
         "train Q approximator network using batches from experience replay"
-        
+        with tf.Session(graph=trainDict["graph"]) as sessT:
+            with tf.Session(graph=evalDict["graph"]) as sessE:
+                #################
         
     def test(self):
         "test the network"
