@@ -12,7 +12,7 @@ class dqn:
         self.score = 0
         self.actions = self.env.action_space.shape[0]
         self.features = self.env.observation_space.shape[0]
-        self.experience = {"obs": [], "act": [], "reward": [], "newObs": []}
+        self.experience = []
         self.batchSize = batchSize
         self.netDict1 = self.buildModel(hiddenNodes) # 2 nets to alternate between for stability
         self.netDict2 = self.buildModel(hiddenNodes)
@@ -60,7 +60,7 @@ class dqn:
     
     def train(self, trainDict, evalDict, keepProb):
         "train Q approximator network using batches from experience replay"
-        batch = #get from experience 
+        #get data batch
         with tf.Session(graph=trainDict["graph"]) as sessT:
             with tf.Session(graph=evalDict["graph"]) as sessE:
                 
@@ -70,7 +70,8 @@ class dqn:
         
     def update(self, reward, observation):
         "updates the q network approximator given result of action"
-        self.experience.append((self.prevObs, self.prevAction, reward, observation))
+        self.experience.append([self.prevObs, self.prevAction, reward, observation])
+        
         if len(experience) >= self.batchSize:
             #train
         
