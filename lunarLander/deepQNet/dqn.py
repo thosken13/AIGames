@@ -12,7 +12,7 @@ class dqn:
         self.score = 0
         self.actions = self.env.action_space.shape[0]
         self.features = self.env.observation_space.shape[0]
-        self.experience = []
+        self.experience = {"obs": [], "act": [], "reward": [], "newObs": []}
         self.batchSize = batchSize
         self.netDict1 = self.buildModel(hiddenNodes) # 2 nets to alternate between for stability
         self.netDict2 = self.buildModel(hiddenNodes)
@@ -22,22 +22,26 @@ class dqn:
         g = tf.Graph()
         with g.as_default():
             #variables
-            inpt = tf.placeholder(tf.float32, shape=[self.batchSize, self.features]) #any number (batchSize) of vectors of length self.obs
+            inpt = tf.placeholder(tf.float32, shape=[None, self.features]) #any number (batchSize for training, or single for evaluation) of vectors of length self.obs
             hidd1Weights = tf.Variable(tf.random_normal(shape=[self.features, hiddenNodes]))
-            hidd1Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes]))
+            hidd1Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes])) #broadcasting applies to addition to all rows
             hidd2Weights = tf.Variable(tf.random_normal(shape=[hiddenNodes, hiddenNodes]))
             hidd2Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes]))
             outptWeights = tf.Variable(tf.random_normal(shape=[hiddenNodes, self.actions]))
             outptBiases = tf.Variable(tf.random_normal(shape=[self.actions]))
             #computational graph
             hidd1 = tf.nn.leaky_relu(tf.add(tf.matmul(inpt, hidd1Weights), hidd1Biases))
-            keepProb = tf.placeholder('float')
+            keepProb = tf.placeholder(tf.int32)
             hidd1DropOut = tf.nn.dropout(hidd1, keepProb)
             hidd2 = tf.nn.leaky_relu(tf.add(tf.matmul(hidd1DropOut, hidd2Weights), hidd2Biases))
             "unsure about softmax"outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases))
             #Optimization
-            error = tf.placeholder(tf.float32
-        netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb}
+            target = tf.placeholder(tf.float32, shape=[self.actions])
+            cost = tf.losses.mean_squared_error(target, outpt) #check axis done over
+            optimizer = tf.train.AdamOptimizer(learning_rate=self.alpha).minimize(cost) #implement something explicitly?
+            
+        netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb,
+                   "target": target, "optimizer": optimizer}
         return netDict
         
     def qApproxNet(self, observation, netDict):
@@ -56,9 +60,10 @@ class dqn:
     
     def train(self, trainDict, evalDict, keepProb):
         "train Q approximator network using batches from experience replay"
+        batch = #get from experience 
         with tf.Session(graph=trainDict["graph"]) as sessT:
             with tf.Session(graph=evalDict["graph"]) as sessE:
-                #################
+                
         
     def test(self):
         "test the network"
