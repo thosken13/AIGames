@@ -23,7 +23,6 @@ class dqn:
         with g.as_default():
             #variables
             inpt = tf.placeholder(tf.float32, shape=[self.batchSize, self.features]) #any number (batchSize) of vectors of length self.obs
-            outpt = tf.placeholder(tf.float32, shape=[self.batchSize, self.actions]) #matching number of vectors containing the Q vals for each action
             hidd1Weights = tf.Variable(tf.random_normal(shape=[self.features, hiddenNodes]))
             hidd1Biases = tf.Variable(tf.random_normal(shape=[self.features, hiddenNodes]))
             hidd2Weights = tf.Variable(tf.random_normal(shape=[hiddenNodes, hiddenNodes]))
@@ -36,6 +35,7 @@ class dqn:
             hidd1DropOut = tf.nn.dropout(hidd1, keepProb)
             hidd2 = tf.nn.leaky_relu(tf.add(tf.matmul(hidd1DropOut, hidd2Weights), hidd2Biases))
             "unsure about softmax"outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases))
+            ############## add optimizer ################
         netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb}
         return netDict
         
