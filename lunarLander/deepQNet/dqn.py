@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import random
 
 class dqn:
     def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize):
@@ -60,10 +61,10 @@ class dqn:
     
     def train(self, trainDict, evalDict, keepProb):
         "train Q approximator network using batches from experience replay"
-        #get data batch
+        batch = np.array(random.sample(experience, self.batchSize))
         with tf.Session(graph=trainDict["graph"]) as sessT:
             with tf.Session(graph=evalDict["graph"]) as sessE:
-                
+                #feed batch into graphs using feed_dict and indexing
         
     def test(self):
         "test the network"
@@ -71,7 +72,6 @@ class dqn:
     def update(self, reward, observation):
         "updates the q network approximator given result of action"
         self.experience.append([self.prevObs, self.prevAction, reward, observation])
-        
         if len(experience) >= self.batchSize:
             #train
         
