@@ -24,18 +24,19 @@ class dqn:
             #variables
             inpt = tf.placeholder(tf.float32, shape=[self.batchSize, self.features]) #any number (batchSize) of vectors of length self.obs
             hidd1Weights = tf.Variable(tf.random_normal(shape=[self.features, hiddenNodes]))
-            hidd1Biases = tf.Variable(tf.random_normal(shape=[self.features, hiddenNodes]))
+            hidd1Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes]))
             hidd2Weights = tf.Variable(tf.random_normal(shape=[hiddenNodes, hiddenNodes]))
-            hidd2Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes, hiddenNodes]))
+            hidd2Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes]))
             outptWeights = tf.Variable(tf.random_normal(shape=[hiddenNodes, self.actions]))
-            putptBiases = tf.Variable(tf.random_normal(shape=[hiddenNodes, self.actions]))
+            outptBiases = tf.Variable(tf.random_normal(shape=[self.actions]))
             #computational graph
             hidd1 = tf.nn.leaky_relu(tf.add(tf.matmul(inpt, hidd1Weights), hidd1Biases))
             keepProb = tf.placeholder('float')
             hidd1DropOut = tf.nn.dropout(hidd1, keepProb)
             hidd2 = tf.nn.leaky_relu(tf.add(tf.matmul(hidd1DropOut, hidd2Weights), hidd2Biases))
             "unsure about softmax"outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases))
-            ############## add optimizer ################
+            #Optimization
+            error = tf.placeholder(tf.float32
         netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb}
         return netDict
         
