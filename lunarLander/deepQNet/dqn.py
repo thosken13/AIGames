@@ -15,8 +15,7 @@ class dqn:
         self.features = self.env.observation_space.shape[0]
         self.experience = []
         self.batchSize = batchSize
-        self.netDict1 = self.buildModel(hiddenNodes) # 2 nets to alternate between for stability
-        self.netDict2 = self.buildModel(hiddenNodes)
+        self.netDict = self.buildModel(hiddenNodes)
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"
@@ -43,23 +42,30 @@ class dqn:
             
         netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb,
                    "target": target, "optimizer": optimizer}
+        with tf.Session(graph=g) as sess:
+            sess.run(tf.global_variables_initializer())
+            saver = tf.train.Saver()
+            saver.save(sess, "savedNetwork1")
+            saver.save(sess, "savedNetwork2")
         return netDict
         
-    def qApproxNet(self, observation, netDict):
+    def qApproxNet(self, observation):
         "calculates approximation for Q values for all actions at state"
-        with tf.Session(graph=netDict["graph"]) as sess:
-            qVals = sess.run(netDict["out"], feed_dict={netDict["in"]: observation, netDict["keepProb"]: 1})
+        with tf.Session(graph=self.netDict["graph"]) as sess:
+            restorer = tf.train.import_meta_graph("savedNetwork1.meta")
+            restorer.restore(sess, tf.train.latest_checkpoint('./'))
+            qVals = sess.run(self.netDict["out"], feed_dict={self.netDict["in"]: observation, self.netDict["keepProb"]: 1})
         return qVals
     
-    def action(self, observation, netDict):
+    def action(self, observation):
         "chooses an action given observation"
         if np.random.rand() < self.epsilon:
             self.prevAction = self.env.action_space.sample()
         else:
-            self.prevAction = np.argmax(qApproxNet(observation, netDict))
+            self.prevAction = np.argmax(qApproxNet(observation))
         return self.prevAction
     
-    def train(self, trainDict, evalDict, keepProb):
+    def train(self, keepProb):
         "train Q approximator network using batches from experience replay"
         batch = random.sample(self.experience, self.batchSize)
         prevObs = []
@@ -69,9 +75,13 @@ class dqn:
             prevObs.append(batch[i][0])
             reward.append(batch[i][1])
             nextObs.append(batch[i][2])
-        with tf.Session(graph=trainDict["graph"]) as sess:
-            target = np.array(reward) + self.gamma*np.array(qApproxNet(nextObs, evalDict))
-            sess.run(trainDict["optimizer"], feed_dict={trainDict["in"]: prevObs, trainDict["keepProb"]: keepProb, trainDict["target"]: target})
+        with tf.Session(graph=self.netDict["graph"]) as sess:
+            restorer = tf.train.import_meta_graph("savedNetwork2.meta")
+            restorer.restore(sess, tf.train.latest_checkpoint('./'))
+            target = np.array(reward) + self.gamma*np.array(qApproxNet(nextObs))
+            sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: keepProb, self.netDict["target"]: target})
+            saver = tf.train.Saver()
+            saver.save(sess, "savedNetwork2")
         
     def test(self):
         "test the network"
@@ -80,12 +90,17 @@ class dqn:
         "updates the q network approximator given result of action"
         self.experience.append([self.prevObs, reward, observation])
         if len(experience) >= self.batchSize:
-            #choose train and eval graph
-            self.train()        
+            self.train()#######
         self.prevObs = observation
     
-    
-    
+    def equateWeights(self):
+        "copies the more recently trained weights to the other graph"
+        with tf.Session(graph=self.netDict["graph"]) as sess:
+            restorer = tf.train.import_meta_graph("savedNetwork2.meta")
+            restorer.restore(sess, tf.train.latest_checkpoint('./'))
+            #maybe need to run session here
+            saver = tf.train.Saver()
+            saver.save(sess, "savedNetwork1")
     
     
     
