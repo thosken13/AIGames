@@ -61,20 +61,27 @@ class dqn:
     
     def train(self, trainDict, evalDict, keepProb):
         "train Q approximator network using batches from experience replay"
-        batch = np.array(random.sample(experience, self.batchSize))
-        with tf.Session(graph=trainDict["graph"]) as sessT:
-            with tf.Session(graph=evalDict["graph"]) as sessE:
-                #feed batch into graphs using feed_dict and indexing
+        batch = random.sample(self.experience, self.batchSize)
+        prevObs = []
+        reward = []
+        nextObs = []
+        for i in range(self.batchSize):
+            prevObs.append(batch[i][0])
+            reward.append(batch[i][1])
+            nextObs.append(batch[i][2])
+        with tf.Session(graph=trainDict["graph"]) as sess:
+            target = np.array(reward) + self.gamma*np.array(qApproxNet(nextObs, evalDict))
+            sess.run(trainDict["optimizer"], feed_dict={trainDict["in"]: prevObs, trainDict["keepProb"]: keepProb, trainDict["target"]: target})
         
     def test(self):
         "test the network"
         
     def update(self, reward, observation):
         "updates the q network approximator given result of action"
-        self.experience.append([self.prevObs, self.prevAction, reward, observation])
+        self.experience.append([self.prevObs, reward, observation])
         if len(experience) >= self.batchSize:
-            #train
-        
+            #choose train and eval graph
+            self.train()        
         self.prevObs = observation
     
     
