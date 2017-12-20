@@ -39,12 +39,11 @@ class dqn:
             target = tf.placeholder(tf.float32, shape=[self.actions])
             cost = tf.losses.mean_squared_error(target, outpt) #check axis done over
             optimizer = tf.train.AdamOptimizer(learning_rate=self.alpha).minimize(cost) #implement something explicitly?
-            
+            saver = tf.train.Saver()
         netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb,
-                   "target": target, "optimizer": optimizer}
+                   "target": target, "optimizer": optimizer, "saver": saver}
         with tf.Session(graph=g) as sess:
             sess.run(tf.global_variables_initializer())
-            saver = tf.train.Saver()
             saver.save(sess, "savedNetwork1")
             saver.save(sess, "savedNetwork2")
         return netDict
@@ -52,8 +51,7 @@ class dqn:
     def qApproxNet(self, observation):
         "calculates approximation for Q values for all actions at state"
         with tf.Session(graph=self.netDict["graph"]) as sess:
-            restorer = tf.train.import_meta_graph("savedNetwork1.meta")
-            restorer.restore(sess, tf.train.latest_checkpoint('./'))
+            self.netDict["saver"].restore(sess, "savedNetwork1")
             qVals = sess.run(self.netDict["out"], feed_dict={self.netDict["in"]: observation, self.netDict["keepProb"]: 1})
         return qVals
     
@@ -76,12 +74,10 @@ class dqn:
             reward.append(batch[i][1])
             nextObs.append(batch[i][2])
         with tf.Session(graph=self.netDict["graph"]) as sess:
-            restorer = tf.train.import_meta_graph("savedNetwork2.meta")
-            restorer.restore(sess, tf.train.latest_checkpoint('./'))
+            self.netDict["saver"].restore(sess, "savedNetwork2")
             target = np.array(reward) + self.gamma*np.array(qApproxNet(nextObs))
             sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: keepProb, self.netDict["target"]: target})
-            saver = tf.train.Saver()
-            saver.save(sess, "savedNetwork2")
+            self.netDict["saver"].save(sess, "savedNetwork2")
         
     def test(self):
         "test the network"
@@ -96,11 +92,9 @@ class dqn:
     def equateWeights(self):
         "copies the more recently trained weights to the other graph"
         with tf.Session(graph=self.netDict["graph"]) as sess:
-            restorer = tf.train.import_meta_graph("savedNetwork2.meta")
-            restorer.restore(sess, tf.train.latest_checkpoint('./'))
+            self.netDict["saver"].restore(sess, "savedNetwork2")
             #maybe need to run session here
-            saver = tf.train.Saver()
-            saver.save(sess, "savedNetwork1")
+            self.netDict["saver"].save(sess, "savedNetwork1")
     
     
     
