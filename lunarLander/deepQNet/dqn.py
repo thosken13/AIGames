@@ -45,14 +45,14 @@ class dqn:
                    "target": target, "optimizer": optimizer, "saver": saver}
         with tf.Session(graph=g) as sess:
             sess.run(tf.global_variables_initializer())
-            saver.save(sess, "savedNetwork1")
-            saver.save(sess, "savedNetwork2")
+            saver.save(sess, "sessionFiles/savedNetwork1")
+            saver.save(sess, "sessionFiles/savedNetwork2")
         return netDict
         
     def qApproxNet(self, observation):
         "calculates approximation for Q values for all actions at state"
         with tf.Session(graph=self.netDict["graph"]) as sess:
-            self.netDict["saver"].restore(sess, "savedNetwork1")
+            self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork1")
             qVals = sess.run(self.netDict["out"], feed_dict={self.netDict["in"]: observation, self.netDict["keepProb"]: 1})
         return qVals
     
@@ -75,10 +75,10 @@ class dqn:
             reward.append(batch[i][1])
             nextObs.append(batch[i][2])
         with tf.Session(graph=self.netDict["graph"]) as sess:
-            self.netDict["saver"].restore(sess, "savedNetwork2")
+            self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
             target = np.array(reward) + self.gamma*np.array(qApproxNet(nextObs))
             sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: keepProb, self.netDict["target"]: target})
-            self.netDict["saver"].save(sess, "savedNetwork2")
+            self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
         
     def test(self):
         "test the network"
@@ -93,9 +93,9 @@ class dqn:
     def equateWeights(self):
         "copies the more recently trained weights to the other graph"
         with tf.Session(graph=self.netDict["graph"]) as sess:
-            self.netDict["saver"].restore(sess, "savedNetwork2")
+            self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
             #maybe need to run session here
-            self.netDict["saver"].save(sess, "savedNetwork1")
+            self.netDict["saver"].save(sess, "sessionFiles/savedNetwork1")
     
     
     
