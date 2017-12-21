@@ -3,13 +3,13 @@ import tensorflow as tf
 import random
 
 class dqn:
-    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize, keepProb):
+    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs):
         self.env = environment
         self.epsilon = epsilon
         self.alpha = alpha
         self.gamma = gamma
         self.prevAction = 0
-        self.prevObs = 0
+        self.prevObs = initObs
         self.score = 0
         self.actions = self.env.action_space.shape[0]
         self.features = self.env.observation_space.shape[0]
@@ -79,7 +79,7 @@ class dqn:
             nextObs.append(batch[i][2])
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
-            target = np.reshape(np.array(reward), (self.batchSize, 1)) + self.gamma*np.array(self.qApproxNet(nextObs))
+            target = np.reshape(np.array(reward), (self.batchSize, 1)) + self.gamma*self.qApproxNet(nextObs)
             sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target})
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
         
@@ -90,7 +90,7 @@ class dqn:
         "updates the q network approximator given result of action"
         self.experience.append([self.prevObs, reward, observation])
         if len(self.experience) >= self.batchSize:
-            self.train()#######
+            self.train()
         self.prevObs = observation
         self.score += reward
     
