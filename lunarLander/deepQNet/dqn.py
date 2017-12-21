@@ -20,7 +20,7 @@ class dqn:
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"
-        print("building network")
+        print("Building network")
         g = tf.Graph()
         with g.as_default():
             #variables
@@ -79,7 +79,7 @@ class dqn:
             nextObs.append(batch[i][2])
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
-            target = np.array(reward) + self.gamma*np.array(self.qApproxNet(nextObs))
+            target = np.reshape(np.array(reward), (self.batchSize, 1)) + self.gamma*np.array(self.qApproxNet(nextObs))
             sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target})
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
         
