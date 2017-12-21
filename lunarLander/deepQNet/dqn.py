@@ -20,6 +20,7 @@ class dqn:
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"
+        print("building network")
         g = tf.Graph()
         with g.as_default():
             #variables
@@ -48,6 +49,7 @@ class dqn:
             sess.run(tf.global_variables_initializer())
             saver.save(sess, "sessionFiles/savedNetwork1")
             saver.save(sess, "sessionFiles/savedNetwork2")
+        print("Built!")
         return netDict
         
     def qApproxNet(self, observation):
@@ -77,7 +79,7 @@ class dqn:
             nextObs.append(batch[i][2])
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
-            target = np.array(reward) + self.gamma*np.array(qApproxNet(nextObs))
+            target = np.array(reward) + self.gamma*np.array(self.qApproxNet(nextObs))
             sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target})
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
         
@@ -90,6 +92,7 @@ class dqn:
         if len(self.experience) >= self.batchSize:
             self.train()#######
         self.prevObs = observation
+        self.score += reward
     
     def equateWeights(self):
         "copies the more recently trained weights to the other graph"
@@ -98,8 +101,9 @@ class dqn:
             #maybe need to run session here
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork1")
     
-    
-    
+    def reset(self):
+        "resets ready for another episode run"
+        self.score=0
     
     
     
