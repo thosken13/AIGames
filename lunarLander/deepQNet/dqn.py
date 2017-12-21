@@ -17,6 +17,7 @@ class dqn:
         self.batchSize = batchSize
         self.netDict = self.buildModel(hiddenNodes)
         self.keepProb = keepProb
+        self.episodeNumber=1
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"

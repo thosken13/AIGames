@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import math
+#import os
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 maxIter = 1000
 alpha = 1 
@@ -17,7 +19,7 @@ epsilon = 1
 mineps = 0.01   
 epsilonRate = 1000
 hiddenNodes = 30
-batchSize = 6
+batchSize = 100
 dropOutKeepProb = 0.5
 
 x = []
@@ -45,6 +47,7 @@ for i in range(maxIter):
     agent.alpha = agent.epsilon
     if i%20 == 0:
         print("Episode Number {}".format(i))
+    agent.episodeNumber+=1
     agent.equateWeights()
 
 runEpisode.play(environment, agent, True)
