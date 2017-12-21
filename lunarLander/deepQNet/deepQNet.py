@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import math
 
-maxIter = 15000
+maxIter = 1000
 alpha = 1 
 minAlpha = 0.05 
 alphaRate = 35  
@@ -16,6 +16,8 @@ gamma = 0.98
 epsilon = 1     
 mineps = 0.01   
 epsilonRate = 1000
+hiddenNodes = 30
+batchSize = 100
 
 x = []
 yscores = []
@@ -23,7 +25,7 @@ yeps = []
 yalpha = []
 
 environment = gym.make('LunarLander-v2')
-agent = QLinear.QLinear(environment, alpha, gamma, epsilon)
+agent = dqn.dqn(environment, alpha, gamma, epsilon, hiddenNodes, batchSize)
 streak = 0
 for i in range(maxIter):
     t = runEpisode.play(environment, agent, False)
