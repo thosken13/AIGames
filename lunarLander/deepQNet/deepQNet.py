@@ -18,6 +18,7 @@ mineps = 0.01
 epsilonRate = 1000
 hiddenNodes = 30
 batchSize = 100
+dropOutKeepProb = 0.5
 
 x = []
 yscores = []
@@ -25,7 +26,7 @@ yeps = []
 yalpha = []
 
 environment = gym.make('LunarLander-v2')
-agent = dqn.dqn(environment, alpha, gamma, epsilon, hiddenNodes, batchSize)
+agent = dqn.dqn(environment, alpha, gamma, epsilon, hiddenNodes, batchSize, dropOutKeepProb)
 streak = 0
 for i in range(maxIter):
     t = runEpisode.play(environment, agent, False)

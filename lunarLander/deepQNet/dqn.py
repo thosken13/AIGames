@@ -3,7 +3,7 @@ import tensorflow as tf
 import random
 
 class dqn:
-    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize):
+    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize, keepProb):
         self.env = environment
         self.epsilon = epsilon
         self.alpha = alpha
@@ -16,6 +16,7 @@ class dqn:
         self.experience = []
         self.batchSize = batchSize
         self.netDict = self.buildModel(hiddenNodes)
+        self.keepProb = keepProb
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"
@@ -64,7 +65,7 @@ class dqn:
             self.prevAction = np.argmax(qApproxNet(observation))
         return self.prevAction
     
-    def train(self, keepProb):
+    def train(self):
         "train Q approximator network using batches from experience replay"
         batch = random.sample(self.experience, self.batchSize)
         prevObs = []
@@ -77,7 +78,7 @@ class dqn:
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
             target = np.array(reward) + self.gamma*np.array(qApproxNet(nextObs))
-            sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: keepProb, self.netDict["target"]: target})
+            sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target})
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
         
     def test(self):
@@ -86,7 +87,7 @@ class dqn:
     def update(self, reward, observation):
         "updates the q network approximator given result of action"
         self.experience.append([self.prevObs, reward, observation])
-        if len(experience) >= self.batchSize:
+        if len(self.experience) >= self.batchSize:
             self.train()#######
         self.prevObs = observation
     
