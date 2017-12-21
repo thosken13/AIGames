@@ -31,13 +31,14 @@ class dqn:
             outptBiases = tf.Variable(tf.random_normal(shape=[self.actions]))
             #computational graph
             hidd1 = tf.nn.leaky_relu(tf.add(tf.matmul(inpt, hidd1Weights), hidd1Biases))
-            keepProb = tf.placeholder(tf.int32)
+            keepProb = tf.placeholder(tf.float32)
             hidd1DropOut = tf.nn.dropout(hidd1, keepProb)
             hidd2 = tf.nn.leaky_relu(tf.add(tf.matmul(hidd1DropOut, hidd2Weights), hidd2Biases))
-            "unsure about softmax"outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases))
+            ########## unsure about softmax ########################
+            outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases))
             #Optimization
-            target = tf.placeholder(tf.float32, shape=[self.actions])
-            cost = tf.losses.mean_squared_error(target, outpt) #check axis done over
+            target = tf.placeholder(tf.float32, shape=[None, self.actions])
+            cost = tf.losses.mean_squared_error(target, outpt) #not completely sure about
             optimizer = tf.train.AdamOptimizer(learning_rate=self.alpha).minimize(cost) #implement something explicitly?
             saver = tf.train.Saver()
         netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb,
