@@ -51,7 +51,6 @@ for i in range(maxIter):
     #agent.alpha = agent.epsilon
     if i%20 == 0:
         print("Episode Number {}".format(i))
-    agent.equateWeights()
 
 runEpisode.play(environment, agent, True)
 

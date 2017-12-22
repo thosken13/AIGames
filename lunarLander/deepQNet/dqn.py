@@ -83,6 +83,7 @@ class dqn:
             target = np.reshape(np.array(reward), (self.batchSize, 1)) + self.gamma*self.qApproxNet(nextObs)
             sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target})
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
+        self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
         
     def test(self):
         "test the network"
