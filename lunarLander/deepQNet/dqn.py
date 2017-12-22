@@ -66,7 +66,7 @@ class dqn:
         if np.random.rand() < self.epsilon:
             self.prevAction = self.env.action_space.sample()
         else:
-            self.prevAction = np.argmax(self.qApproxNet(np.reshape(observation, (1,8))))
+            self.prevAction = np.argmax(self.qApproxNet(np.reshape(observation, (1,self.features))))
         return self.prevAction
     
     def train(self):
