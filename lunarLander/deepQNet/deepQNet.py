@@ -8,6 +8,12 @@ import numpy as np
 import pandas as pd
 import math
 
+#unset info messages due to being in interactive
+import logging as _logging
+from logging import WARN
+_logger = _logging.getLogger('tensorflow')
+_logger.setLevel(WARN)
+
 maxIter = 1000
 alpha = 0.001 #constant for ADAM optimizer (decay built in)
 #minAlpha = 0.05 
