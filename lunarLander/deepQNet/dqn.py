@@ -73,15 +73,19 @@ class dqn:
         "train Q approximator network using batches from experience replay"
         batch = random.sample(self.experience, self.batchSize)
         prevObs = []
+        action = []
         reward = []
         nextObs = []
         for i in range(self.batchSize):
             prevObs.append(batch[i][0])
-            reward.append(batch[i][1])
-            nextObs.append(batch[i][2])
+            action.append(batch[i][1])
+            reward.append(batch[i][2])
+            nextObs.append(batch[i][3])
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
-            target = np.reshape(np.array(reward), (self.batchSize, 1)) + self.gamma*self.qApproxNet(nextObs)
+            target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken
+            for i in range(self.batchSize):
+                target[i,action[i]] = reward[i] + self.gamma*np.max(self.qApproxNet(np.reshape(nextObs[i], (1,self.features))))
             sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target})
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
         self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
@@ -91,7 +95,8 @@ class dqn:
         
     def update(self, reward, observation):
         "updates the q network approximator given result of action"
-        self.experience.append([self.prevObs, reward, observation])
+        self.experience.append([self.prevObs, self.prevAction, reward, observation])
+        ############# need to do something about prevObs for first step in EVERY EPISODE ############################
         if self.totStepNumber%self.batchSize == 0:
             self.train()
             if self.totStepNumber%((self.maxExperience+1)*self.batchSize) == 0:#####
