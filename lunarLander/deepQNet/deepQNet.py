@@ -22,9 +22,10 @@ gamma = 0.98
 epsilon = 1     
 mineps = 0.01   
 epsilonRate = 50
-hiddenNodes = 30
-batchSize = 100 #roughly one per episode
+hiddenNodes = 40
 dropOutKeepProb = 0.5
+#need to sort out these!!
+batchSize = 100 #roughly one per episode
 maxExperience = 10 #oldest batch is removed once experience = (maxExperience+1)*batchSize
 
 x = []

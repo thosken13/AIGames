@@ -25,32 +25,36 @@ class dqn:
         print("Building network")
         g = tf.Graph()
         with g.as_default():
-            #variables
-            inpt = tf.placeholder(tf.float32, shape=[None, self.features]) #any number (batchSize for training, or single for evaluation) of vectors of length self.obs
-            hidd1Weights = tf.Variable(tf.random_normal(shape=[self.features, hiddenNodes]))
-            hidd1Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes])) #broadcasting applies to addition to all rows
-            hidd2Weights = tf.Variable(tf.random_normal(shape=[hiddenNodes, hiddenNodes]))
-            hidd2Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes]))
-            outptWeights = tf.Variable(tf.random_normal(shape=[hiddenNodes, self.actions]))
-            outptBiases = tf.Variable(tf.random_normal(shape=[self.actions]))
-            #computational graph
-            hidd1 = tf.nn.leaky_relu(tf.add(tf.matmul(inpt, hidd1Weights), hidd1Biases))
-            keepProb = tf.placeholder(tf.float32)
-            hidd1DropOut = tf.nn.dropout(hidd1, keepProb)
-            hidd2 = tf.nn.leaky_relu(tf.add(tf.matmul(hidd1DropOut, hidd2Weights), hidd2Biases))
-            ########## unsure about softmax ########################
-            outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases))
-            #Optimization
-            target = tf.placeholder(tf.float32, shape=[None, self.actions])
-            cost = tf.losses.mean_squared_error(target, outpt) #not completely sure about
-            optimizer = tf.train.AdamOptimizer(learning_rate=self.alpha).minimize(cost) #implement something explicitly?
+            inpt = tf.placeholder(tf.float32, shape=[None, self.features], name="inputFeatures") #any number (batchSize for training, or single for evaluation) of vectors of length self.obs
+            with tf.name_scope("hiddenLayer1"):
+                hidd1Weights = tf.Variable(tf.random_normal(shape=[self.features, hiddenNodes]), name="weights1")
+                hidd1Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes]), name="biases1") #broadcasting applies to addition to all rows
+                hidd1 = tf.nn.leaky_relu(tf.add(tf.matmul(inpt, hidd1Weights), hidd1Biases), name="1stHiddenLayer")
+                keepProb = tf.placeholder(tf.float32, name="keepProbability")
+                hidd1DropOut = tf.nn.dropout(hidd1, keepProb)
+            with tf.name_scope("hiddenLayer2"):
+                hidd2Weights = tf.Variable(tf.random_normal(shape=[hiddenNodes, hiddenNodes]), name="weights2")
+                hidd2Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes]), name="biases2")
+                hidd2 = tf.nn.leaky_relu(tf.add(tf.matmul(hidd1DropOut, hidd2Weights), hidd2Biases), name="2ndHiddenLayer")
+            with tf.name_scope("outputLayer"):
+                outptWeights = tf.Variable(tf.random_normal(shape=[hiddenNodes, self.actions]), name="weightsOut")
+                outptBiases = tf.Variable(tf.random_normal(shape=[self.actions]), name="biasesOut")
+                ########## unsure about softmax ########################
+                outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases), name="outputActionValues")
+            with tf.name_scope("optimizer"):
+                #Optimization
+                target = tf.placeholder(tf.float32, shape=[None, self.actions], name="target")
+                cost = tf.losses.mean_squared_error(target, outpt) #not completely sure about
+                optimizer = tf.train.AdamOptimizer(learning_rate=self.alpha).minimize(cost) #implement something explicitly?
             saver = tf.train.Saver()
-        netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb,
-                   "target": target, "optimizer": optimizer, "saver": saver}
         with tf.Session(graph=g) as sess:
             sess.run(tf.global_variables_initializer())
             saver.save(sess, "sessionFiles/savedNetwork1")
             saver.save(sess, "sessionFiles/savedNetwork2")
+            writer = tf.summary.FileWriter("tensorBoardFiles", graph=g)
+            writer.close()
+        netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb,
+                   "target": target, "optimizer": optimizer, "saver": saver, "tensorBoard": writer}
         print("Built!")
         return netDict
         
