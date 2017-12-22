@@ -17,7 +17,7 @@ class dqn:
         self.batchSize = batchSize
         self.netDict = self.buildModel(hiddenNodes)
         self.keepProb = keepProb
-        self.episodeNumber=1
+        self.totStepNumber=1
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"
@@ -90,10 +90,11 @@ class dqn:
     def update(self, reward, observation):
         "updates the q network approximator given result of action"
         self.experience.append([self.prevObs, reward, observation])
-        if len(self.experience) >= self.batchSize:
+        if self.totStepNumber%self.batchSize == 0:
             self.train()
         self.prevObs = observation
         self.score += reward
+        self.totStepNumber+=1
     
     def equateWeights(self):
         "copies the more recently trained weights to the other graph"
