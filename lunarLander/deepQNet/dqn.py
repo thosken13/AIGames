@@ -3,7 +3,7 @@ import tensorflow as tf
 import random
 
 class dqn:
-    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs):
+    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp):
         self.env = environment
         self.epsilon = epsilon
         self.alpha = alpha
@@ -18,6 +18,7 @@ class dqn:
         self.netDict = self.buildModel(hiddenNodes)
         self.keepProb = keepProb
         self.totStepNumber=1
+        self.maxExperience = maxExp
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"
@@ -93,6 +94,8 @@ class dqn:
         self.experience.append([self.prevObs, reward, observation])
         if self.totStepNumber%self.batchSize == 0:
             self.train()
+            if self.totStepNumber%((self.maxExperience+1)*self.batchSize) == 0:#####
+                self.experience = self.experience[self.batchSize:-1]           #####
         self.prevObs = observation
         self.score += reward
         self.totStepNumber+=1
