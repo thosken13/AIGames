@@ -15,7 +15,7 @@ alpha = 0.001 #constant for ADAM optimizer (decay built in)
 gamma = 0.98     
 epsilon = 1     
 mineps = 0.01   
-epsilonRate = 1000
+epsilonRate = 50
 hiddenNodes = 30
 batchSize = 100 #roughly one per episode
 dropOutKeepProb = 0.5
@@ -61,7 +61,7 @@ plt.ylabel("exploration rate")
 plt.subplot(3,1,3)
 plt.plot(x, yalpha)
 plt.ylim((0,1))
-plt.plot(x, np.ones_like(x)*minAlpha)
+#plt.plot(x, np.ones_like(x)*minAlpha)
 plt.xlabel("episode")
 plt.ylabel("learning rate")
 plt.show()
