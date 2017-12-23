@@ -45,7 +45,8 @@ class dqn:
                 outptWeights = tf.Variable(tf.random_normal(shape=[hiddenNodes, self.actions]), name="weightsOut")
                 outptBiases = tf.Variable(tf.random_normal(shape=[self.actions]), name="biasesOut")
                 ########## unsure about softmax ########################
-                outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases), name="outputActionValues")
+                #outpt = tf.nn.softmax(tf.add(tf.matmul(hidd2, outptWeights), outptBiases), name="outputActionValues")
+                outpt = tf.add(tf.matmul(hidd2, outptWeights), outptBiases, name="outputActionValues")
             with tf.name_scope("optimizer"):
                 #Optimization
                 target = tf.placeholder(tf.float32, shape=[None, self.actions], name="target")
