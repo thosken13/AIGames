@@ -49,12 +49,12 @@ class dqn:
                 cost = tf.losses.mean_squared_error(target, outpt) #not completely sure about
                 optimizer = tf.train.AdamOptimizer(learning_rate=self.alpha).minimize(cost) #implement something explicitly?
             with tf.name_scope("summaries"):
-                tf.summary.histogram("histogram", hidd1Weights)
-                tf.summary.histogram("histogram", hidd1Biases)
-                tf.summary.histogram("histogram", hidd2Weights)
-                tf.summary.histogram("histogram", hidd2Biases)
-                tf.summary.histogram("histogram", outptWeights)
-                tf.summary.histogram("histogram", outptBiases)
+                tf.summary.histogram("hidd1Weights", hidd1Weights)
+                tf.summary.histogram("hidd1Biases", hidd1Biases)
+                tf.summary.histogram("hidd2Weights", hidd2Weights)
+                tf.summary.histogram("hidd2Biases", hidd2Biases)
+                tf.summary.histogram("outptWeights", outptWeights)
+                tf.summary.histogram("outptBiases", outptBiases)
                 tf.summary.scalar("cost", cost)
             saver = tf.train.Saver()
             summary = tf.summary.merge_all()
