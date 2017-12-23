@@ -63,7 +63,6 @@ class dqn:
             saver.save(sess, "sessionFiles/savedNetwork1")
             saver.save(sess, "sessionFiles/savedNetwork2")
             writer = tf.summary.FileWriter("tensorBoardFiles", graph=g)
-            writer.close()
         netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb,
                    "target": target, "optimizer": optimizer, "saver": saver,
                    "summaryWriter": writer, "summary": summary}
