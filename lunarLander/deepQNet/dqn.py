@@ -18,6 +18,8 @@ class dqn:
         self.netDict = self.buildModel(hiddenNodes)
         self.keepProb = keepProb
         self.totStepNumber=1
+        self.trainSteps=0
+        self.summarySteps=0
         self.maxExperience = maxExp
         
     def buildModel(self, hiddenNodes):
@@ -46,7 +48,16 @@ class dqn:
                 target = tf.placeholder(tf.float32, shape=[None, self.actions], name="target")
                 cost = tf.losses.mean_squared_error(target, outpt) #not completely sure about
                 optimizer = tf.train.AdamOptimizer(learning_rate=self.alpha).minimize(cost) #implement something explicitly?
+            with tf.name_scope("summaries"):
+                tf.summary.histogram("histogram", hidd1Weights)
+                tf.summary.histogram("histogram", hidd1Biases)
+                tf.summary.histogram("histogram", hidd2Weights)
+                tf.summary.histogram("histogram", hidd2Biases)
+                tf.summary.histogram("histogram", outptWeights)
+                tf.summary.histogram("histogram", outptBiases)
+                tf.summary.scalar("cost", cost)
             saver = tf.train.Saver()
+            summary = tf.summary.merge_all()
         with tf.Session(graph=g) as sess:
             sess.run(tf.global_variables_initializer())
             saver.save(sess, "sessionFiles/savedNetwork1")
@@ -54,9 +65,16 @@ class dqn:
             writer = tf.summary.FileWriter("tensorBoardFiles", graph=g)
             writer.close()
         netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb,
-                   "target": target, "optimizer": optimizer, "saver": saver, "tensorBoard": writer}
+                   "target": target, "optimizer": optimizer, "saver": saver,
+                   "summaryWriter": writer, "summary": summary}
         print("Built!")
         return netDict
+        
+    def writeSummary(self, sess, feedDict):
+        summaryString = sess.run(self.netDict["summary"], feed_dict=feedDict)
+        self.netDict["summaryWriter"].add_summary(summaryString, self.summarySteps)
+        self.netDict["summaryWriter"].flush()
+        self.summarySteps+=1
         
     def qApproxNet(self, observation):
         "calculates approximation for Q values for all actions at state"
@@ -73,7 +91,7 @@ class dqn:
             self.prevAction = np.argmax(self.qApproxNet(np.reshape(observation, (1,self.features))))
         return self.prevAction
     
-    def train(self):
+    def train(self, summary=False):
         "train Q approximator network using batches from experience replay"
         batch = random.sample(self.experience, self.batchSize)
         prevObs = []
@@ -88,9 +106,13 @@ class dqn:
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
             target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken
-            for i in range(self.batchSize):
+            for i in range(self.batchSize): ####get rid of loop!!!###
                 target[i,action[i]] = reward[i] + self.gamma*np.max(self.qApproxNet(np.reshape(nextObs[i], (1,self.features))))
-            sess.run(self.netDict["optimizer"], feed_dict={self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target})
+                feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target}
+            sess.run(self.netDict["optimizer"], feed_dict=feedDict)
+            if summary:
+                self.writeSummary(sess, feedDict)
+                print(1)
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
         self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
         
@@ -102,7 +124,11 @@ class dqn:
         self.experience.append([self.prevObs, self.prevAction, reward, observation])
         ############# need to do something about prevObs for first step in EVERY EPISODE ############################
         if self.totStepNumber%self.batchSize == 0:
-            self.train()
+            self.trainSteps+=1
+            if self.trainSteps%10 == 0:
+                self.train(True)
+            else:
+                self.train()
             if self.totStepNumber%((self.maxExperience+1)*self.batchSize) == 0:#####
                 self.experience = self.experience[self.batchSize:-1]           #####
         self.prevObs = observation
