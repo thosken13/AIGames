@@ -106,13 +106,13 @@ class dqn:
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
             target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken
-            for i in range(self.batchSize): ####get rid of loop!!!###
-                target[i,action[i]] = reward[i] + self.gamma*np.max(self.qApproxNet(np.reshape(nextObs[i], (1,self.features))))
-                feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target}
+            discountFutureReward = self.gamma*np.max(self.qApproxNet(nextObs), 1)# 1 to get max in each row
+            for i in range(self.batchSize):
+                target[i,action[i]] = reward[i] + discountFutureReward[i]
+            feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target}
             sess.run(self.netDict["optimizer"], feed_dict=feedDict)
             if summary:
                 self.writeSummary(sess, feedDict)
-                print(1)
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
         self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
         
