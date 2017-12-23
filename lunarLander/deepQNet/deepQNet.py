@@ -18,15 +18,19 @@ maxIter = 1000
 alpha = 0.002 #constant for ADAM optimizer (decay built in)
 #minAlpha = 0.05 
 #alphaRate = 35  
-gamma = 0.98     
+gamma = 0.99     
 epsilon = 1     
 mineps = 0.01   
 epsilonRate = 50
 hiddenNodes = 40
 dropOutKeepProb = 0.5
 #need to sort out these!!
-batchSize = 100 #roughly one per episode
+batchSize = 1000
+trainFreq = 25 #train when totStepNumber%trainFreq == 0
 maxExperience = 10 #oldest batch is removed once experience = (maxExperience+1)*batchSize
+
+meanObs = np.array([0, 0.6, 0, -0.6, 0, 0, 0, 0])
+stdObs = np.array([0.3, 0.3, 0.6, 0.5, 0.5, 0.4, 0.1, 0.1])
 
 x = []
 yscores = []
@@ -35,7 +39,7 @@ yalpha = []
 
 environment = gym.make('LunarLander-v2')
 initObs = environment.reset()
-agent = dqn.dqn(environment, alpha, gamma, epsilon, hiddenNodes, batchSize, dropOutKeepProb, initObs, maxExperience)
+agent = dqn.dqn(environment, alpha, gamma, epsilon, hiddenNodes, batchSize, dropOutKeepProb, initObs, maxExperience, trainFreq, meanObs, stdObs)
 streak = 0
 for i in range(maxIter):
     if i%20 == 0:

@@ -3,14 +3,11 @@ import tensorflow as tf
 import random
 
 class dqn:
-    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp):
+    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp, trainFreq, meanObs, stdObs):
         self.env = environment
         self.epsilon = epsilon
         self.alpha = alpha
         self.gamma = gamma
-        self.prevAction = 0
-        self.prevObs = initObs
-        self.score = 0
         self.actions = self.env.action_space.shape[0]
         self.features = self.env.observation_space.shape[0]
         self.experience = []
@@ -18,9 +15,15 @@ class dqn:
         self.netDict = self.buildModel(hiddenNodes)
         self.keepProb = keepProb
         self.totStepNumber=1
+        self.trainFreq = trainFreq
         self.trainSteps=0
         self.summarySteps=0
         self.maxExperience = maxExp
+        self.meanObs = meanObs
+        self.stdObs = stdObs
+        self.prevAction = 0
+        self.prevObs = self.processObs(initObs)
+        self.score = 0
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"
@@ -75,6 +78,10 @@ class dqn:
         self.netDict["summaryWriter"].flush()
         self.summarySteps+=1
         
+    def processObs(self, observation):
+        "normalise observations to aid network performance"
+        return (observation - self.meanObs)/self.stdObs
+        
     def qApproxNet(self, observation):
         "calculates approximation for Q values for all actions at state"
         with tf.Session(graph=self.netDict["graph"]) as sess:
@@ -120,9 +127,10 @@ class dqn:
         
     def update(self, reward, observation):
         "updates the q network approximator given result of action"
-        self.experience.append([self.prevObs, self.prevAction, reward, observation])
+        processedObs = self.processObs(observation)
+        self.experience.append([self.prevObs, self.prevAction, reward, processedObs])
         ############# need to do something about prevObs for first step in EVERY EPISODE ############################
-        if self.totStepNumber%self.batchSize == 0:
+        if self.totStepNumber>=self.batchSize and self.totStepNumber%self.trainFreq == 0:
             self.trainSteps+=1
             if self.trainSteps%10 == 0:
                 self.train(True)
