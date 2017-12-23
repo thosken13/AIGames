@@ -38,6 +38,8 @@ initObs = environment.reset()
 agent = dqn.dqn(environment, alpha, gamma, epsilon, hiddenNodes, batchSize, dropOutKeepProb, initObs, maxExperience)
 streak = 0
 for i in range(maxIter):
+    if i%20 == 0:
+        print("Episode Number {}".format(i))
     t = runEpisode.play(environment, agent, False)
     x.append(i+1)
     yscores.append(agent.score)
@@ -51,8 +53,6 @@ for i in range(maxIter):
     #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
     agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
     #agent.alpha = agent.epsilon
-    if i%20 == 0:
-        print("Episode Number {}".format(i))
 
 runEpisode.play(environment, agent, True)
 
