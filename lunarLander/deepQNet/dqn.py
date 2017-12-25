@@ -3,7 +3,7 @@ import tensorflow as tf
 import random
 
 class dqn:
-    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp, trainFreq, meanObs, stdObs):
+    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp, trainFreq, setNetFreq, meanObs, stdObs):
         self.env = environment
         self.epsilon = epsilon
         self.alpha = alpha
@@ -16,6 +16,7 @@ class dqn:
         self.keepProb = keepProb
         self.totStepNumber=1
         self.trainFreq = trainFreq
+        self.setNetFreq = setNetFreq
         self.trainSteps=0
         self.summarySteps=0
         self.maxExperience = maxExp
@@ -121,7 +122,8 @@ class dqn:
             if summary:
                 self.writeSummary(sess, feedDict)
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
-        self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
+        if self.trainSteps%self.setNetFreq == 0:
+            self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
         
     def test(self):
         "test the network"
