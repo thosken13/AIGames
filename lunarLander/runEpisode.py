@@ -23,7 +23,12 @@ def play(env, agent, render, printRes=True):
                 print("Landed!")
             if reward == 10:
                 print("Leg-ground contact")
-            print("Episode finished after {} timesteps, with a score of {}".format(t, agent.score))
         if render:
-            env.render()
+           env.render()
+    if printRes:
+        print("Episode finished after {} timesteps, with a score of {}".format(t, agent.score))
     return t
+    
+    
+    
+    
