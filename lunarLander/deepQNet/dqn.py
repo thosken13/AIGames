@@ -61,6 +61,8 @@ class dqn:
                 tf.summary.histogram("outptWeights", outptWeights)
                 tf.summary.histogram("outptBiases", outptBiases)
                 tf.summary.scalar("cost", cost)
+                score = tf.placeholder(tf.float32, name="score")
+                tf.summary.scalar("score", score)
             saver = tf.train.Saver()
             summary = tf.summary.merge_all()
         with tf.Session(graph=g) as sess:
@@ -70,7 +72,7 @@ class dqn:
             writer = tf.summary.FileWriter("tensorBoardFiles", graph=g)
         netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb,
                    "target": target, "optimizer": optimizer, "saver": saver,
-                   "summaryWriter": writer, "summary": summary}
+                   "score": score, "summaryWriter": writer, "summary": summary}
         print("Built!")
         return netDict
         
@@ -117,7 +119,7 @@ class dqn:
             discountFutureReward = self.gamma*np.max(self.qApproxNet(nextObs), 1)# 1 to get max in each row
             for i in range(self.batchSize):
                 target[i,action[i]] = reward[i] + discountFutureReward[i]
-            feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target}
+            feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.score}
             sess.run(self.netDict["optimizer"], feed_dict=feedDict)
             if summary:
                 self.writeSummary(sess, feedDict)
@@ -135,8 +137,8 @@ class dqn:
         ############# need to do something about prevObs for first step in EVERY EPISODE ############################
         if self.totStepNumber>=self.batchSize and self.totStepNumber%self.trainFreq == 0:
             self.trainSteps+=1
-            if self.trainSteps%10 == 0:
-                self.train(True)
+            if self.trainSteps%5 == 0:
+                self.train(True) #writeSummary
             else:
                 self.train()
             if self.totStepNumber%((self.maxExperience+1)*self.batchSize) == 0:#####
