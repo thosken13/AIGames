@@ -17,6 +17,7 @@ class dqn:
         self.totStepNumber=1
         self.trainFreq = trainFreq
         self.setNetFreq = setNetFreq
+        self.summaryFreq = 5
         self.trainSteps=0
         self.summarySteps=0
         self.maxExperience = maxExp
@@ -137,7 +138,7 @@ class dqn:
         ############# need to do something about prevObs for first step in EVERY EPISODE ############################
         if self.totStepNumber>=self.batchSize and self.totStepNumber%self.trainFreq == 0:
             self.trainSteps+=1
-            if self.trainSteps%5 == 0:
+            if self.trainSteps%self.summaryFreq == 0:
                 self.train(True) #writeSummary
             else:
                 self.train()
