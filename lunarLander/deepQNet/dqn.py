@@ -3,10 +3,11 @@ import tensorflow as tf
 import random
 
 class dqn:
-    def __init__(self, environment, alpha, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp, trainFreq, setNetFreq, meanObs, stdObs):
+    def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp, trainFreq, setNetFreq, meanObs, stdObs):
         self.env = environment
         self.epsilon = epsilon
-        self.alpha = alpha
+        self.learnRateTarget = alpha1
+        self.learnRateTrain = alpha2
         self.gamma = gamma
         self.actions = self.env.action_space.shape[0]
         self.features = self.env.observation_space.shape[0]
@@ -53,7 +54,8 @@ class dqn:
                 #Optimization
                 target = tf.placeholder(tf.float32, shape=[None, self.actions], name="target")
                 cost = tf.losses.mean_squared_error(target, outpt) #not completely sure about
-                optimizer = tf.train.AdamOptimizer(learning_rate=self.alpha).minimize(cost) #implement something explicitly?
+                learnRate = tf.placeholder(tf.float32, name="learningRate")
+                optimizer = tf.train.AdamOptimizer(learning_rate=learnRate).minimize(cost) #implement something explicitly?
             with tf.name_scope("summaries"):
                 tf.summary.histogram("hidd1Weights", hidd1Weights)
                 tf.summary.histogram("hidd1Biases", hidd1Biases)
@@ -72,8 +74,8 @@ class dqn:
             saver.save(sess, "sessionFiles/savedNetwork2")
             writer = tf.summary.FileWriter("tensorBoardFiles", graph=g)
         netDict = {"graph": g, "in": inpt, "out": outpt, "keepProb": keepProb,
-                   "target": target, "optimizer": optimizer, "saver": saver,
-                   "score": score, "summaryWriter": writer, "summary": summary}
+                   "target": target, "optimizer": optimizer, "learningRate": learnRate, 
+                   "saver": saver, "score": score, "summaryWriter": writer, "summary": summary}
         print("Built!")
         return netDict
         
@@ -102,7 +104,7 @@ class dqn:
             self.prevAction = np.argmax(self.qApproxNet(np.reshape(observation, (1,self.features))))
         return self.prevAction
     
-    def train(self, summary=False):
+    def train(self, learnRate, savedNet, summary=False):
         "train Q approximator network using batches from experience replay"
         batch = random.sample(self.experience, self.batchSize)
         prevObs = []
@@ -115,18 +117,18 @@ class dqn:
             reward.append(batch[i][2])
             nextObs.append(batch[i][3])
         with tf.Session(graph=self.netDict["graph"]) as sess:
-            self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
+            self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork"+str(savedNet))
             target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken
             discountFutureReward = self.gamma*np.max(self.qApproxNet(nextObs), 1)# 1 to get max in each row
             for i in range(self.batchSize):
                 target[i,action[i]] = reward[i] + discountFutureReward[i]
-            feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.score}
+            feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.score, self.netDict["learningRate"]: learnRate}
             sess.run(self.netDict["optimizer"], feed_dict=feedDict)
             if summary:
                 self.writeSummary(sess, feedDict)
-            self.netDict["saver"].save(sess, "sessionFiles/savedNetwork2")
-        if self.trainSteps%self.setNetFreq == 0:
-            self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
+            self.netDict["saver"].save(sess, "sessionFiles/savedNetwork"+str(savedNet))
+        #if self.trainSteps%self.setNetFreq == 0:
+         #   self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
         
     def test(self):
         "test the network"
@@ -139,9 +141,11 @@ class dqn:
         if self.totStepNumber>=self.batchSize and self.totStepNumber%self.trainFreq == 0:
             self.trainSteps+=1
             if self.trainSteps%self.summaryFreq == 0:
-                self.train(True) #writeSummary
+                self.train(self.learnRateTrain, 2, True) #writeSummary
+                self.train(self.learnRateTarget, 1), True
             else:
-                self.train()
+                self.train(self.learnRateTrain, 2)
+                self.train(self.learnRateTarget, 1)
             if self.totStepNumber%((self.maxExperience+1)*self.batchSize) == 0:#####
                 self.experience = self.experience[self.batchSize:-1]           #####
         self.prevObs = observation

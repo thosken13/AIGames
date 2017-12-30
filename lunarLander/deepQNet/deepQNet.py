@@ -16,7 +16,8 @@ _logger = _logging.getLogger('tensorflow')
 _logger.setLevel(WARN)
 
 maxIter = 1000
-alpha = 0.0009 #constant for ADAM optimizer (decay built in)
+alpha1 = 0.00004
+alpha2 = 0.0009 #constant for ADAM optimizer (decay built in)
 #minAlpha = 0.05 
 #alphaRate = 35  
 gamma = 0.99     
@@ -28,7 +29,7 @@ dropOutKeepProb = 0.5#############################
 #need to sort out these!!
 batchSize = 1000
 trainFreq = 25 #train when totStepNumber%trainFreq == 0
-setNetFreq = 5
+setNetFreq = 10
 maxExperience = 8 #oldest batch is removed once experience = (maxExperience+1)*batchSize
 
 #meanObs = np.array([0, 0.6, 0, -0.6, 0, 0, 0, 0])
@@ -42,7 +43,7 @@ yalpha = []
 environment = gym.make('LunarLander-v2')
 initObs = environment.reset()
 meanObs, stdObs = randomPlay.randomPlay(environment)
-agent = dqn.dqn(environment, alpha, gamma, epsilon, hiddenNodes, batchSize, dropOutKeepProb, initObs, maxExperience, trainFreq, setNetFreq, meanObs, stdObs)
+agent = dqn.dqn(environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, dropOutKeepProb, initObs, maxExperience, trainFreq, setNetFreq, meanObs, stdObs)
 streak = 0
 for i in range(maxIter):
     if i%20 == 0:
@@ -50,7 +51,7 @@ for i in range(maxIter):
     t = runEpisode.play(environment, agent, False)
     x.append(i+1)
     yscores.append(agent.score)
-    yalpha.append(agent.alpha)
+    #yalpha.append(agent.alpha)
     yeps.append(agent.epsilon)
     if i+1 >= 100:
         if sum(yscores[-100:])/100 >= 195:
@@ -72,9 +73,9 @@ plt.subplot(3,1,2)
 plt.plot(x, yeps)
 plt.ylim((0,1))
 plt.ylabel("exploration rate")
-plt.subplot(3,1,3)
-plt.plot(x, yalpha)
-plt.ylim((0,1))
+#plt.subplot(3,1,3)
+#plt.plot(x, yalpha)
+#plt.ylim((0,1))
 #plt.plot(x, np.ones_like(x)*minAlpha)
 plt.xlabel("episode")
 plt.ylabel("learning rate")
