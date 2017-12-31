@@ -54,7 +54,8 @@ class dqn:
             with tf.name_scope("optimizer"):
                 #Optimization
                 target = tf.placeholder(tf.float32, shape=[None, self.actions], name="target")
-                cost = tf.losses.mean_squared_error(target, outpt) #not completely sure about
+                #cost = tf.losses.mean_squared_error(target, outpt) #not completely sure about
+                cost = tf.losses.huber_loss(target, outpt) #could change delta
                 learnRate = tf.placeholder(tf.float32, name="learningRate")
                 optimizer = tf.train.AdamOptimizer(learning_rate=learnRate).minimize(cost) #implement something explicitly?
             with tf.name_scope("summaries"):
@@ -87,7 +88,7 @@ class dqn:
         self.netDict["summaryWriter"].flush()
         t1 = time.time()
         tot = t1-t0
-        print("writeSummary", tot)
+        #print("writeSummary", tot)
         self.summarySteps+=1
         
     def processObs(self, observation):
@@ -101,7 +102,7 @@ class dqn:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork1")
             t1=time.time()
             tot=t1-t0
-            print("qApprox load sess",tot)
+            #print("qApprox load sess",tot)
             qVals = sess.run(self.netDict["out"], feed_dict={self.netDict["in"]: observation, self.netDict["keepProb"]: 1})
         return qVals
     
@@ -128,7 +129,7 @@ class dqn:
             nextObs.append(batch[i][3])
         t1=time.time()
         tot=t1-t0
-        print("train making batch", tot)
+        #print("train making batch", tot)
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork"+str(savedNet))
             target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken
@@ -140,14 +141,14 @@ class dqn:
             sess.run(self.netDict["optimizer"], feed_dict=feedDict)
             t1=time.time()
             tot=t1-t0
-            print("train run optimization",tot)
+            #print("train run optimization",tot)
             if summary:
                 self.writeSummary(sess, feedDict)
             t0=time.time()
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork"+str(savedNet))
             t1=time.time()
             tot=t1-t0
-            print("train save", tot)
+            #print("train save", tot)
         #if self.trainSteps%self.setNetFreq == 0:
          #   self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
         
