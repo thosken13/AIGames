@@ -17,7 +17,7 @@ _logger.setLevel(WARN)
 
 maxIter = 1000
 alpha1 = 0.00004
-alpha2 = 0.0009 #constant for ADAM optimizer (decay built in)
+alpha2 = 0.002 #constant for ADAM optimizer (decay built in)
 #minAlpha = 0.05 
 #alphaRate = 35  
 gamma = 0.99     

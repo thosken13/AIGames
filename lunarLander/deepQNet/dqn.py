@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import random
+import time
 
 class dqn:
     def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp, trainFreq, setNetFreq, meanObs, stdObs):
@@ -80,9 +81,13 @@ class dqn:
         return netDict
         
     def writeSummary(self, sess, feedDict):
+        t0 = time.time()
         summaryString = sess.run(self.netDict["summary"], feed_dict=feedDict)
         self.netDict["summaryWriter"].add_summary(summaryString, self.summarySteps)
         self.netDict["summaryWriter"].flush()
+        t1 = time.time()
+        tot = t1-t0
+        print("writeSummary", tot)
         self.summarySteps+=1
         
     def processObs(self, observation):
@@ -92,7 +97,11 @@ class dqn:
     def qApproxNet(self, observation):
         "calculates approximation for Q values for all actions at state"
         with tf.Session(graph=self.netDict["graph"]) as sess:
+            t0=time.time()
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork1")
+            t1=time.time()
+            tot=t1-t0
+            print("qApprox load sess",tot)
             qVals = sess.run(self.netDict["out"], feed_dict={self.netDict["in"]: observation, self.netDict["keepProb"]: 1})
         return qVals
     
@@ -106,6 +115,7 @@ class dqn:
     
     def train(self, learnRate, savedNet, summary=False):
         "train Q approximator network using batches from experience replay"
+        t0=time.time()
         batch = random.sample(self.experience, self.batchSize)
         prevObs = []
         action = []
@@ -116,6 +126,9 @@ class dqn:
             action.append(batch[i][1])
             reward.append(batch[i][2])
             nextObs.append(batch[i][3])
+        t1=time.time()
+        tot=t1-t0
+        print("train making batch", tot)
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork"+str(savedNet))
             target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken
@@ -123,10 +136,18 @@ class dqn:
             for i in range(self.batchSize):
                 target[i,action[i]] = reward[i] + discountFutureReward[i]
             feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.score, self.netDict["learningRate"]: learnRate}
+            t0=time.time()
             sess.run(self.netDict["optimizer"], feed_dict=feedDict)
+            t1=time.time()
+            tot=t1-t0
+            print("train run optimization",tot)
             if summary:
                 self.writeSummary(sess, feedDict)
+            t0=time.time()
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork"+str(savedNet))
+            t1=time.time()
+            tot=t1-t0
+            print("train save", tot)
         #if self.trainSteps%self.setNetFreq == 0:
          #   self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
         
