@@ -55,7 +55,7 @@ class dqn:
                 #Optimization
                 target = tf.placeholder(tf.float32, shape=[None, self.actions], name="target")
                 #cost = tf.losses.mean_squared_error(target, outpt) #not completely sure about
-                cost = tf.losses.huber_loss(target, outpt) #could change delta
+                cost = tf.losses.huber_loss(target, outpt) #could change delta (https://en.wikipedia.org/wiki/Huber_loss)
                 learnRate = tf.placeholder(tf.float32, name="learningRate")
                 optimizer = tf.train.AdamOptimizer(learning_rate=learnRate).minimize(cost) #implement something explicitly?
             with tf.name_scope("summaries"):

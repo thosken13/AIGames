@@ -16,7 +16,7 @@ _logger = _logging.getLogger('tensorflow')
 _logger.setLevel(WARN)
 
 maxIter = 1000
-alpha1 = 0.000004
+alpha1 = 0.00001
 alpha2 = 0.002 #constant for ADAM optimizer (decay built in)
 #minAlpha = 0.05 
 #alphaRate = 35  
