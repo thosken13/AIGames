@@ -16,7 +16,7 @@ _logger = _logging.getLogger('tensorflow')
 _logger.setLevel(WARN)
 
 maxIter = 1000
-alpha1 = 0.00004
+alpha1 = 0.000004
 alpha2 = 0.002 #constant for ADAM optimizer (decay built in)
 #minAlpha = 0.05 
 #alphaRate = 35  
@@ -30,7 +30,7 @@ dropOutKeepProb = 0.5#############################
 batchSize = 1000
 trainFreq = 25 #train when totStepNumber%trainFreq == 0
 setNetFreq = 10
-maxExperience = 8 #oldest batch is removed once experience = (maxExperience+1)*batchSize
+maxExperience = 20 #oldest batch is removed once experience = (maxExperience+1)*batchSize
 
 #meanObs = np.array([0, 0.6, 0, -0.6, 0, 0, 0, 0])
 #stdObs = np.array([0.3, 0.3, 0.6, 0.5, 0.5, 0.4, 0.1, 0.1])
