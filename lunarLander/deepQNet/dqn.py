@@ -106,7 +106,7 @@ class dqn:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork1")
             t1=time.time()
             tot=t1-t0
-            #print("qApprox load sess",tot)
+            print("qApprox load sess",tot)
             qVals = sess.run(self.netDict["out"], feed_dict={self.netDict["in"]: observation, self.netDict["keepProb"]: 1})
         return qVals
     
@@ -137,7 +137,7 @@ class dqn:
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork"+str(savedNet))
             target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken
-            discountFutureReward = self.gamma*np.max(self.qApproxNet(nextObs), 1)# 1 to get max in each row
+            discountFutureReward = self.gamma*np.amax(self.qApproxNet(nextObs), 1)# 1 to get max in each row
             for i in range(self.batchSize):
                 target[i,action[i]] = reward[i] + discountFutureReward[i]
             feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.finalScore, self.netDict["learningRate"]: learnRate}
@@ -152,7 +152,7 @@ class dqn:
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork"+str(savedNet))
             t1=time.time()
             tot=t1-t0
-            #print("train save", tot)
+            print("train save", tot)
         #if self.trainSteps%self.setNetFreq == 0:
          #   self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
         
@@ -179,7 +179,11 @@ class dqn:
     def update(self, reward, observation):
         "updates the q network approximator given result of action"
         processedObs = self.processObs(observation)
+        t0=time.time()
         self.experience.append([self.prevObs, self.prevAction, reward, processedObs])
+        t1=time.time()
+        tot=t1-t0
+        print("append experience", tot)
         ############# need to do something about prevObs for first step in EVERY EPISODE ############################
         if self.totStepNumber>=self.batchSize*self.minBatches and self.totStepNumber%self.trainFreq == 0:
             self.trainSteps+=1

@@ -30,7 +30,7 @@ hiddenNodes = 40
 dropOutKeepProb = 0.5#############################
 #need to sort out these!!
 batchSize = 1000
-minBatches = 10
+minBatches = 5
 trainFreq = 25 #train when totStepNumber%trainFreq == 0
 setNetFreq = 10
 maxExperience = 200 #oldest batch is removed once experience = (maxExperience+1)*batchSize
