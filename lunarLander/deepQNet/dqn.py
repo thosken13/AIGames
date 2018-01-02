@@ -4,7 +4,7 @@ import random
 import time
 
 class dqn:
-    def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, keepProb, initObs, maxExp, trainFreq, setNetFreq, lrSplit, meanObs, stdObs):
+    def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, keepProb, initObs, maxExp, trainFreq, setNetFreq, lrSplit, targetUpdateF, meanObs, stdObs):
         self.env = environment
         self.epsilon = epsilon
         self.learnRateTarget = alpha1
@@ -20,6 +20,7 @@ class dqn:
         self.trainFreq = trainFreq
         self.setNetFreq = setNetFreq
         self.learnRateSplit = lrSplit
+        self.targetUpdateF = targetUpdateF
         self.minBatches = minBatches
         self.summaryFreq = 5
         self.trainSteps=0
@@ -158,6 +159,23 @@ class dqn:
     def test(self):
         "test the network"
         
+    def targetUpdate(self):
+        "update target network from training network, scaled by 1/targetUpdateF"
+        with tf.Session(graph=self.netDict["graph"]) as sess:
+            self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
+            variables = tf.trainable_variables()
+            varVals = []
+            for v in variables:
+                varVals.append(v.eval())
+        with tf.Session(graph=self.netDict["graph"]) as sess:
+            self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork1")
+            variables = tf.trainable_variables()
+            for i, v in enumerate(variables):
+                current = v.eval()
+                update = v.assign(self.targetUpdateF*(varVals[i] - current) + current)
+                sess.run(update)
+            self.netDict["saver"].save(sess, "sessionFiles/savedNetwork1")    
+        
     def update(self, reward, observation):
         "updates the q network approximator given result of action"
         processedObs = self.processObs(observation)
@@ -171,10 +189,12 @@ class dqn:
                 lrTarget = self.learnRateTrain
             if self.trainSteps%self.summaryFreq == 0: #writeSummary
                 self.train(self.learnRateTrain, 2, True) 
-                self.train(lrTarget, 1)
+                self.targetUpdate()
+                #self.train(lrTarget, 1)
             else:
                 self.train(self.learnRateTrain, 2)
-                self.train(lrTarget, 1)
+                self.targetUpdate()
+                #self.train(lrTarget, 1)
             if self.totStepNumber%((self.maxExperience+1)*self.batchSize) == 0:#####
                 self.experience = self.experience[self.batchSize:-1]           #####
         self.prevObs = observation

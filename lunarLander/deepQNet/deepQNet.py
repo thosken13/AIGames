@@ -19,6 +19,7 @@ maxIter = 1000
 alpha1 = 0.00002
 alpha2 = 0.002 #constant for ADAM optimizer (decay built in)
 lrSplit = 100
+targetUpdateFrac = 0.08####
 #minAlpha = 0.05 
 #alphaRate = 35  
 gamma = 0.99     
@@ -45,7 +46,7 @@ yalpha = []
 environment = gym.make('LunarLander-v2')
 initObs = environment.reset()
 meanObs, stdObs = randomPlay.randomPlay(environment)
-agent = dqn.dqn(environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, dropOutKeepProb, initObs, maxExperience, trainFreq, setNetFreq, lrSplit, meanObs, stdObs)
+agent = dqn.dqn(environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, dropOutKeepProb, initObs, maxExperience, trainFreq, setNetFreq, lrSplit, targetUpdateFrac, meanObs, stdObs)
 streak = 0
 for i in range(maxIter):
     if i%20 == 0:
