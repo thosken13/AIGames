@@ -29,9 +29,10 @@ hiddenNodes = 40
 dropOutKeepProb = 0.5#############################
 #need to sort out these!!
 batchSize = 1000
+minBatches = 10
 trainFreq = 25 #train when totStepNumber%trainFreq == 0
 setNetFreq = 10
-maxExperience = 20 #oldest batch is removed once experience = (maxExperience+1)*batchSize
+maxExperience = 200 #oldest batch is removed once experience = (maxExperience+1)*batchSize
 
 #meanObs = np.array([0, 0.6, 0, -0.6, 0, 0, 0, 0])
 #stdObs = np.array([0.3, 0.3, 0.6, 0.5, 0.5, 0.4, 0.1, 0.1])
@@ -44,7 +45,7 @@ yalpha = []
 environment = gym.make('LunarLander-v2')
 initObs = environment.reset()
 meanObs, stdObs = randomPlay.randomPlay(environment)
-agent = dqn.dqn(environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, dropOutKeepProb, initObs, maxExperience, trainFreq, setNetFreq, lrSplit, meanObs, stdObs)
+agent = dqn.dqn(environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, dropOutKeepProb, initObs, maxExperience, trainFreq, setNetFreq, lrSplit, meanObs, stdObs)
 streak = 0
 for i in range(maxIter):
     if i%20 == 0:

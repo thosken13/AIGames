@@ -4,7 +4,7 @@ import random
 import time
 
 class dqn:
-    def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp, trainFreq, setNetFreq, lrSplit, meanObs, stdObs):
+    def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, keepProb, initObs, maxExp, trainFreq, setNetFreq, lrSplit, meanObs, stdObs):
         self.env = environment
         self.epsilon = epsilon
         self.learnRateTarget = alpha1
@@ -20,6 +20,7 @@ class dqn:
         self.trainFreq = trainFreq
         self.setNetFreq = setNetFreq
         self.learnRateSplit = lrSplit
+        self.minBatches = minBatches
         self.summaryFreq = 5
         self.trainSteps=0
         self.summarySteps=0
@@ -162,7 +163,7 @@ class dqn:
         processedObs = self.processObs(observation)
         self.experience.append([self.prevObs, self.prevAction, reward, processedObs])
         ############# need to do something about prevObs for first step in EVERY EPISODE ############################
-        if self.totStepNumber>=self.batchSize and self.totStepNumber%self.trainFreq == 0:
+        if self.totStepNumber>=self.batchSize*self.minBatches and self.totStepNumber%self.trainFreq == 0:
             self.trainSteps+=1
             if self.trainSteps >= self.learnRateSplit:
                 lrTarget = self.learnRateTarget
