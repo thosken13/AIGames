@@ -16,8 +16,9 @@ _logger = _logging.getLogger('tensorflow')
 _logger.setLevel(WARN)
 
 maxIter = 1000
-alpha1 = 0.00001
+alpha1 = 0.00002
 alpha2 = 0.002 #constant for ADAM optimizer (decay built in)
+lrSplit = 100
 #minAlpha = 0.05 
 #alphaRate = 35  
 gamma = 0.99     
@@ -43,7 +44,7 @@ yalpha = []
 environment = gym.make('LunarLander-v2')
 initObs = environment.reset()
 meanObs, stdObs = randomPlay.randomPlay(environment)
-agent = dqn.dqn(environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, dropOutKeepProb, initObs, maxExperience, trainFreq, setNetFreq, meanObs, stdObs)
+agent = dqn.dqn(environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, dropOutKeepProb, initObs, maxExperience, trainFreq, setNetFreq, lrSplit, meanObs, stdObs)
 streak = 0
 for i in range(maxIter):
     if i%20 == 0:
@@ -57,6 +58,7 @@ for i in range(maxIter):
         if sum(yscores[-100:])/100 >= 195:
             print("Solved after {} episodes!".format(i+1))
             break
+    agent.finalScore = agent.score
     agent.reset()
     #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
     agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)

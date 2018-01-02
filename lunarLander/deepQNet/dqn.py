@@ -4,7 +4,7 @@ import random
 import time
 
 class dqn:
-    def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp, trainFreq, setNetFreq, meanObs, stdObs):
+    def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, keepProb, initObs, maxExp, trainFreq, setNetFreq, lrSplit, meanObs, stdObs):
         self.env = environment
         self.epsilon = epsilon
         self.learnRateTarget = alpha1
@@ -19,6 +19,7 @@ class dqn:
         self.totStepNumber=1
         self.trainFreq = trainFreq
         self.setNetFreq = setNetFreq
+        self.learnRateSplit = lrSplit
         self.summaryFreq = 5
         self.trainSteps=0
         self.summarySteps=0
@@ -163,12 +164,16 @@ class dqn:
         ############# need to do something about prevObs for first step in EVERY EPISODE ############################
         if self.totStepNumber>=self.batchSize and self.totStepNumber%self.trainFreq == 0:
             self.trainSteps+=1
-            if self.trainSteps%self.summaryFreq == 0:
-                self.train(self.learnRateTrain, 2, True) #writeSummary
-                self.train(self.learnRateTarget, 1), True
+            if self.trainSteps >= self.learnRateSplit:
+                lrTarget = self.learnRateTarget
+            else:
+                lrTarget = self.learnRateTrain
+            if self.trainSteps%self.summaryFreq == 0: #writeSummary
+                self.train(self.learnRateTrain, 2, True) 
+                self.train(lrTarget, 1)
             else:
                 self.train(self.learnRateTrain, 2)
-                self.train(self.learnRateTarget, 1)
+                self.train(lrTarget, 1)
             if self.totStepNumber%((self.maxExperience+1)*self.batchSize) == 0:#####
                 self.experience = self.experience[self.batchSize:-1]           #####
         self.prevObs = observation
