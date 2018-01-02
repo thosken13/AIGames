@@ -28,6 +28,7 @@ class dqn:
         self.prevAction = 0
         self.prevObs = self.processObs(initObs)
         self.score = 0
+        self.finalScore = -999
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"
@@ -136,7 +137,7 @@ class dqn:
             discountFutureReward = self.gamma*np.max(self.qApproxNet(nextObs), 1)# 1 to get max in each row
             for i in range(self.batchSize):
                 target[i,action[i]] = reward[i] + discountFutureReward[i]
-            feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.score, self.netDict["learningRate"]: learnRate}
+            feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.finalScore, self.netDict["learningRate"]: learnRate}
             t0=time.time()
             sess.run(self.netDict["optimizer"], feed_dict=feedDict)
             t1=time.time()
