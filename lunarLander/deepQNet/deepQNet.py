@@ -63,7 +63,8 @@ for i in range(maxIter):
     agent.finalScore = agent.score
     agent.reset()
     #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
-    agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
+    #agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
+    agent.epsilon = agent.epsilon*0.975
     #agent.alpha = agent.epsilon
 
 runEpisode.play(environment, agent, True)
