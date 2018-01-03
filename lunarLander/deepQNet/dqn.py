@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 import random
-import time
 
 class dqn:
     def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, keepProb, initObs, maxExp, trainFreq, setNetFreq, lrSplit, targetUpdateF, meanObs, stdObs):
@@ -93,13 +92,9 @@ class dqn:
         return netDict
         
     def writeSummary(self, sess, feedDict):
-        t0 = time.time()
         summaryString = sess.run(self.netDict["summary"], feed_dict=feedDict)
         self.netDict["summaryWriter"].add_summary(summaryString, self.summarySteps)
         self.netDict["summaryWriter"].flush()
-        t1 = time.time()
-        tot = t1-t0
-        #print("writeSummary", tot)
         self.summarySteps+=1
         
     def saveVars(self, trainNet=True):
@@ -126,11 +121,6 @@ class dqn:
     def qApproxNet(self, observation, trainNet=True): #WAS ALWAYS USING TARGET VALS, SHOULDN'T FOR ACTION CHOICE!!
         "calculates approximation for Q values for all actions at state"
         with tf.Session(graph=self.netDict["graph"]) as sess:
-            t0=time.time()
-            #self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork1")
-            t1=time.time()
-            tot=t1-t0
-            #print("qApprox load sess",tot)
             netChoice = self.chooseNet(trainNet)
             qVals = sess.run(self.netDict["out"], feed_dict={self.netDict["in"]: observation, self.netDict["variables"][0]: netChoice[0], self.netDict["variables"][1]: netChoice[1], self.netDict["variables"][2]: netChoice[2], self.netDict["variables"][3]: netChoice[3], self.netDict["variables"][4]: netChoice[4], self.netDict["variables"][5]: netChoice[5], self.netDict["keepProb"]: 1})
         return qVals
@@ -145,7 +135,6 @@ class dqn:
     
     def train(self, learnRate, savedNet, summary=False):
         "train Q approximator network using batches from experience replay"
-        t0=time.time()
         batch = random.sample(self.experience, self.batchSize)
         prevObs = []
         action = []
@@ -156,9 +145,6 @@ class dqn:
             action.append(batch[i][1])
             reward.append(batch[i][2])
             nextObs.append(batch[i][3])
-        t1=time.time()
-        tot=t1-t0
-        #print("train making batch", tot)
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork"+str(savedNet))
             target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken (so use trained net)
@@ -168,55 +154,23 @@ class dqn:
             feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.finalScore, self.netDict["learningRate"]: learnRate}
             #DO DICTIONARY COMPREHENSION ABOVE AND FOR OTHER FEEDdICT
             #OR TRY TUPLE AGAIN
-            t0=time.time()
             sess.run(self.netDict["optimizer"], feed_dict=feedDict)
             self.saveVars()
-            t1=time.time()
-            tot=t1-t0
-            #print("train run optimization",tot)
             if summary:
                 self.writeSummary(sess, feedDict)
-            t0=time.time()
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork"+str(savedNet))
-            t1=time.time()
-            tot=t1-t0
-            #print("train save", tot)
         #if self.trainSteps%self.setNetFreq == 0:
          #   self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
-        
-    def test(self):
-        "test the network"
-        
-    def targetUpdate2(self):
-        "update target network from training network, scaled by 1/targetUpdateF"
-        with tf.Session(graph=self.netDict["graph"]) as sess:
-            self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
-            variables = tf.trainable_variables()
-            varVals = []
-            for v in variables:
-                varVals.append(v.eval())
-        with tf.Session(graph=self.netDict["graph"]) as sess:
-            self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork1")
-            variables = tf.trainable_variables()
-            for i, v in enumerate(variables):
-                current = v.eval()
-                update = v.assign(self.targetUpdateF*(varVals[i] - current) + current)
-                sess.run(update)
-            self.netDict["saver"].save(sess, "sessionFiles/savedNetwork1") 
             
     def targetUpdate(self):
-        "update target network from training network, scaled by 1/targetUpdateF"
+        "update target network from training network, scaled by targetUpdateF"
         for i, v in enumerate(self.targetVariables):
             v += self.targetUpdateF*(self.trainVariables[i] - v)
         
     def update(self, reward, observation):
         "updates the q network approximator given result of action"
         processedObs = self.processObs(observation)
-        t0=time.time()
         self.experience.append([self.prevObs, self.prevAction, reward, processedObs])
-        t1=time.time()
-        tot=t1-t0
-        #print("append experience", tot)
         ############# need to do something about prevObs for first step in EVERY EPISODE ############################
         if self.totStepNumber>=self.batchSize*self.minBatches and self.totStepNumber%self.trainFreq == 0:
             self.trainSteps+=1
