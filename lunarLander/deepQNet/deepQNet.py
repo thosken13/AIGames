@@ -50,7 +50,7 @@ agent = dqn.dqn(environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchS
 streak = 0
 for i in range(maxIter):
     if i%20 == 0:
-        print("Episode Number {}".format(i))
+        print("Episode Number {}, epsilon {}".format(i, agent.epsilon))
     t = runEpisode.play(environment, agent, False)
     x.append(i+1)
     yscores.append(agent.score)
@@ -63,8 +63,7 @@ for i in range(maxIter):
     agent.finalScore = agent.score
     agent.reset()
     #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
-    #agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
-    agent.epsilon = agent.epsilon*0.975
+    agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
     #agent.alpha = agent.epsilon
 
 runEpisode.play(environment, agent, True)
