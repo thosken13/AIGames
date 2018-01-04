@@ -43,13 +43,13 @@ class dqn:
             with tf.name_scope("hiddenLayer1"):
                 hidd1Weights = tf.Variable(tf.random_normal(shape=[self.features, hiddenNodes]), name="weights1")
                 hidd1Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes]), name="biases1") #broadcasting applies to addition to all rows
-                hidd1 = tf.nn.leaky_relu(tf.add(tf.matmul(inpt, hidd1Weights), hidd1Biases), name="1stHiddenLayer")
+                hidd1 = tf.nn.leaky_relu(tf.add(tf.matmul(inpt, hidd1Weights), hidd1Biases), name="1stHiddenLayer", alpha = 0.01)
                 keepProb = tf.placeholder(tf.float32, name="keepProbability")
                 hidd1DropOut = tf.nn.dropout(hidd1, keepProb)
             with tf.name_scope("hiddenLayer2"):
                 hidd2Weights = tf.Variable(tf.random_normal(shape=[hiddenNodes, hiddenNodes]), name="weights2")
                 hidd2Biases = tf.Variable(tf.random_normal(shape=[hiddenNodes]), name="biases2")
-                hidd2 = tf.nn.leaky_relu(tf.add(tf.matmul(hidd1DropOut, hidd2Weights), hidd2Biases), name="2ndHiddenLayer")
+                hidd2 = tf.nn.leaky_relu(tf.add(tf.matmul(hidd1DropOut, hidd2Weights), hidd2Biases), name="2ndHiddenLayer", alpha = 0.01)
             with tf.name_scope("outputLayer"):
                 outptWeights = tf.Variable(tf.random_normal(shape=[hiddenNodes, self.actions]), name="weightsOut")
                 outptBiases = tf.Variable(tf.random_normal(shape=[self.actions]), name="biasesOut")
@@ -132,7 +132,8 @@ class dqn:
         if np.random.rand() < self.epsilon:
             self.prevAction = self.env.action_space.sample()
         else:
-            self.prevAction = np.argmax(self.qApproxNet(np.reshape(observation, (1,self.features))))
+            processedObs = self.processObs(observation)
+            self.prevAction = np.argmax(self.qApproxNet(np.reshape(processedObs, (1,self.features))))
         return self.prevAction
     
     def train(self, learnRate, savedNet, summary=False):
@@ -192,15 +193,13 @@ class dqn:
                 #self.train(lrTarget, 1)
             if self.totStepNumber%((self.maxExperience+1)*self.batchSize) == 0:#####
                 self.experience = self.experience[self.batchSize:-1]           #####
-        self.prevObs = observation
+        self.prevObs = processedObs
         self.score += reward
         self.totStepNumber+=1
-        self.firstStep = False
     
     def reset(self):
         "resets ready for another episode run"
         self.score=0
-        self.firstStep = True
     
     
     
