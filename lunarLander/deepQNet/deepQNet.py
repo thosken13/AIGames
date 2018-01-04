@@ -17,7 +17,7 @@ _logger.setLevel(WARN)
 
 maxIter = 1000
 alpha1 = 0.00002
-alpha2 = 0.002 #constant for ADAM optimizer (decay built in)
+alpha2 = 0.001 #constant for ADAM optimizer (decay built in)
 lrSplit = 100
 targetUpdateFrac = 0.08####
 #minAlpha = 0.05 
@@ -25,13 +25,13 @@ targetUpdateFrac = 0.08####
 gamma = 0.99     
 epsilon = 1     
 mineps = 0.01   
-epsilonRate = 50
-hiddenNodes = 40
+epsilonRate = 100
+hiddenNodes = 50
 dropOutKeepProb = 0.5#############################
 #need to sort out these!!
-batchSize = 1000
-minBatches = 5
-trainFreq = 25 #train when totStepNumber%trainFreq == 0
+batchSize = 50
+minBatches = 40
+trainFreq = 1 #train when totStepNumber%trainFreq == 0
 setNetFreq = 10
 maxExperience = 200 #oldest batch is removed once experience = (maxExperience+1)*batchSize
 
