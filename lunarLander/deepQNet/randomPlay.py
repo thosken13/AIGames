@@ -13,7 +13,7 @@ class randomAgent:
         "plays random actions"
         return self.env.action_space.sample()
     
-    def update(self, reward, observation):
+    def update(self, reward, observation, done):
         self.obs.append(observation)
         
     def calcMeanStd(self):
