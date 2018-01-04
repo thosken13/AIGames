@@ -16,7 +16,7 @@ def play(env, agent, render, printRes=True):
         action = agent.action(observation)
         #print(action)
         observation, reward, done, info = env.step(action)
-        agent.update(reward, observation)
+        agent.update(reward, observation, done)
         t+=1
         if printRes:
             if reward >= 100:
