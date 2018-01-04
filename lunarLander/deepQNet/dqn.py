@@ -61,6 +61,8 @@ class dqn:
                 target = tf.placeholder(tf.float32, shape=[None, self.actions], name="target")
                 #cost = tf.losses.mean_squared_error(target, outpt) #not completely sure about
                 cost = tf.losses.huber_loss(target, outpt) #could change delta (https://en.wikipedia.org/wiki/Huber_loss)
+                #cost = target - outpt
+                #cost = tf.Print(cost, [cost])
                 learnRate = tf.placeholder(tf.float32, name="learningRate")
                 optimizer = tf.train.AdamOptimizer(learning_rate=learnRate).minimize(cost) #implement something explicitly?
             with tf.name_scope("summaries"):
@@ -140,17 +142,22 @@ class dqn:
         action = []
         reward = []
         nextObs = []
+        done = []
         for i in range(self.batchSize):
             prevObs.append(batch[i][0])
             action.append(batch[i][1])
             reward.append(batch[i][2])
             nextObs.append(batch[i][3])
+            done.append(batch[i][4])
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork"+str(savedNet))
             target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken (so use trained net)
             discountFutureReward = self.gamma*np.amax(self.qApproxNet(nextObs, trainNet=False), 1)# 1 to get max in each row (use target network because this is computing part of the target value)
             for i in range(self.batchSize):
-                target[i,action[i]] = reward[i] + discountFutureReward[i]
+                if not done:
+                    target[i,action[i]] = reward[i] + discountFutureReward[i]
+                else:
+                    target[i,action[i]] = reward[i]
             feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.finalScore, self.netDict["learningRate"]: learnRate}
             #DO DICTIONARY COMPREHENSION ABOVE AND FOR OTHER FEEDdICT
             #OR TRY TUPLE AGAIN
@@ -159,18 +166,16 @@ class dqn:
             if summary:
                 self.writeSummary(sess, feedDict)
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork"+str(savedNet))
-        #if self.trainSteps%self.setNetFreq == 0:
-         #   self.equateWeights() #set network weights equal (to trained weights) after training one according to the error provided by evaluating the other
-            
+         
     def targetUpdate(self):
         "update target network from training network, scaled by targetUpdateF"
         for i, v in enumerate(self.targetVariables):
             v += self.targetUpdateF*(self.trainVariables[i] - v)
         
-    def update(self, reward, observation):
+    def update(self, reward, observation, done):
         "updates the q network approximator given result of action"
         processedObs = self.processObs(observation)
-        self.experience.append([self.prevObs, self.prevAction, reward, processedObs])
+        self.experience.append([self.prevObs, self.prevAction, reward, processedObs, done])
         ############# need to do something about prevObs for first step in EVERY EPISODE ############################
         if self.totStepNumber>=self.batchSize*self.minBatches and self.totStepNumber%self.trainFreq == 0:
             self.trainSteps+=1
@@ -191,13 +196,6 @@ class dqn:
         self.prevObs = observation
         self.score += reward
         self.totStepNumber+=1
-    
-    def equateWeights(self):
-        "copies the more recently trained weights to the other graph"
-        with tf.Session(graph=self.netDict["graph"]) as sess:
-            self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork2")
-            #maybe need to run session here
-            self.netDict["saver"].save(sess, "sessionFiles/savedNetwork1")
     
     def reset(self):
         "resets ready for another episode run"
