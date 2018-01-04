@@ -7,6 +7,7 @@ def play(env, agent, render, printRes=True):
     #print(env.action_space)
     #print(env.observation_space)
     observation = env.reset()
+    agent.prevObs = agent.processObs(observation)
     #print(observation)
     done = False
     t=0

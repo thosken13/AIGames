@@ -176,7 +176,6 @@ class dqn:
         "updates the q network approximator given result of action"
         processedObs = self.processObs(observation)
         self.experience.append([self.prevObs, self.prevAction, reward, processedObs, done])
-        ############# need to do something about prevObs for first step in EVERY EPISODE ############################
         if self.totStepNumber>=self.batchSize*self.minBatches and self.totStepNumber%self.trainFreq == 0:
             self.trainSteps+=1
             if self.trainSteps >= self.learnRateSplit:
@@ -196,10 +195,12 @@ class dqn:
         self.prevObs = observation
         self.score += reward
         self.totStepNumber+=1
+        self.firstStep = False
     
     def reset(self):
         "resets ready for another episode run"
         self.score=0
+        self.firstStep = True
     
     
     

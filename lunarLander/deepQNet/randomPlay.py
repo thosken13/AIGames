@@ -16,6 +16,9 @@ class randomAgent:
     def update(self, reward, observation, done):
         self.obs.append(observation)
         
+    def processObs(self, observation):
+        pass
+        
     def calcMeanStd(self):
         """calculate mean and standard deviation for each feature
          from the observations"""
