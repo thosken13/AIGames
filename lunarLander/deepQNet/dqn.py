@@ -34,6 +34,7 @@ class dqn:
         self.prevObs = self.processObs(initObs)
         self.score = 0
         self.finalScore = -999
+        self.scoreList = []
         
     def buildModel(self, hiddenNodes):
         "builds the neural network"
@@ -93,6 +94,14 @@ class dqn:
                    "saver": saver, "score": score, "summaryWriter": writer, "summary": summary}
         print("Built!")
         return netDict
+        
+    def scorer(self, score):
+        self.scoreList.append(score)
+        if len(self.scoreList) > 7:
+            self.scoreList = self.scoreList[1:]
+    
+    def movingScore(self):
+        return sum(self.scoreList)/len(self.scoreList)
         
     def writeSummary(self, sess, feedDict):
         summaryString = sess.run(self.netDict["summary"], feed_dict=feedDict)
@@ -162,7 +171,7 @@ class dqn:
                         target[i,action[i]] = reward[i] + discountFutureReward[i]
                     else:
                         target[i,action[i]] = reward[i]
-                feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.finalScore, self.netDict["learningRate"]: learnRate}
+                feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.movingScore, self.netDict["learningRate"]: learnRate}
                 #DO DICTIONARY COMPREHENSION ABOVE AND FOR OTHER FEEDdICT
                 #OR TRY TUPLE AGAIN
                 sess.run(self.netDict["optimizer"], feed_dict=feedDict)

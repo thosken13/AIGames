@@ -62,6 +62,7 @@ for i in range(maxIter):
             print("Solved after {} episodes!".format(i+1))
             break
     agent.finalScore = agent.score
+    agent.scorer(agent.score)
     agent.reset()
     #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
     #agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
