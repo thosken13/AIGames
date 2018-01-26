@@ -3,7 +3,7 @@ import tensorflow as tf
 import random
 
 class dqn:
-    def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, keepProb, initObs, maxExp, trainFreq, setNetFreq, lrSplit, targetUpdateF, meanObs, stdObs):
+    def __init__(self, environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, keepProb, initObs, maxExp, trainFreq, numTrainBatches, setNetFreq, lrSplit, targetUpdateF, meanObs, stdObs):
         self.env = environment
         self.epsilon = epsilon
         self.learnRateTarget = alpha1
@@ -19,6 +19,7 @@ class dqn:
         self.keepProb = keepProb
         self.totStepNumber=1
         self.trainFreq = trainFreq
+        self.numTrainBatches = numTrainBatches
         self.setNetFreq = setNetFreq
         self.learnRateSplit = lrSplit
         self.targetUpdateF = targetUpdateF
@@ -138,36 +139,38 @@ class dqn:
     
     def train(self, learnRate, savedNet, summary=False):
         "train Q approximator network using batches from experience replay"
-        batch = random.sample(self.experience, self.batchSize)
-        prevObs = []
-        action = []
-        reward = []
-        nextObs = []
-        done = []
-        for i in range(self.batchSize):
-            prevObs.append(batch[i][0])
-            action.append(batch[i][1])
-            reward.append(batch[i][2])
-            nextObs.append(batch[i][3])
-            done.append(batch[i][4])
         with tf.Session(graph=self.netDict["graph"]) as sess:
             self.netDict["saver"].restore(sess, "sessionFiles/savedNetwork"+str(savedNet))
-            target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken (so use trained net)
-            discountFutureReward = self.gamma*np.amax(self.qApproxNet(nextObs, trainNet=False), 1)# 1 to get max in each row (use target network because this is computing part of the target value)
-            for i in range(self.batchSize):
-                if not done:
-                    target[i,action[i]] = reward[i] + discountFutureReward[i]
-                else:
-                    target[i,action[i]] = reward[i]
-            feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.finalScore, self.netDict["learningRate"]: learnRate}
-            #DO DICTIONARY COMPREHENSION ABOVE AND FOR OTHER FEEDdICT
-            #OR TRY TUPLE AGAIN
-            sess.run(self.netDict["optimizer"], feed_dict=feedDict)
-            self.saveVars()
+            for b in range(self.numTrainBatches):
+                batch = random.sample(self.experience, self.batchSize)
+                prevObs = []
+                action = []
+                reward = []
+                nextObs = []
+                done = []
+                for i in range(self.batchSize):
+                    prevObs.append(batch[i][0])
+                    action.append(batch[i][1])
+                    reward.append(batch[i][2])
+                    nextObs.append(batch[i][3])
+                    done.append(batch[i][4])
+                    
+                target = self.qApproxNet(prevObs) #will give no error contribution from qvals where action wasn't taken (so use trained net)
+                discountFutureReward = self.gamma*np.amax(self.qApproxNet(nextObs, trainNet=False), 1)# 1 to get max in each row (use target network because this is computing part of the target value)
+                for i in range(self.batchSize):
+                    if not done[i]:
+                        target[i,action[i]] = reward[i] + discountFutureReward[i]
+                    else:
+                        target[i,action[i]] = reward[i]
+                feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.finalScore, self.netDict["learningRate"]: learnRate}
+                #DO DICTIONARY COMPREHENSION ABOVE AND FOR OTHER FEEDdICT
+                #OR TRY TUPLE AGAIN
+                sess.run(self.netDict["optimizer"], feed_dict=feedDict)
             if summary:
                 self.writeSummary(sess, feedDict)
             self.netDict["saver"].save(sess, "sessionFiles/savedNetwork"+str(savedNet))
-         
+            self.saveVars()
+             
     def targetUpdate(self):
         "update target network from training network, scaled by targetUpdateF"
         for i, v in enumerate(self.targetVariables):

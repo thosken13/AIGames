@@ -17,23 +17,24 @@ _logger.setLevel(WARN)
 
 maxIter = 1000
 alpha1 = 0.00002
-alpha2 = 0.001 #constant for ADAM optimizer (decay built in)
+alpha2 = 0.0005 #constant for ADAM optimizer (decay built in)
 lrSplit = 100
-targetUpdateFrac = 0.08####
+targetUpdateFrac = 0.01####
 #minAlpha = 0.05 
 #alphaRate = 35  
 gamma = 0.99     
 epsilon = 1     
-mineps = 0.01   
-epsilonRate = 100
+mineps = 0.08   
+epsilonRate = 50#100
 hiddenNodes = 50
 dropOutKeepProb = 0.5#############################
 #need to sort out these!!
-batchSize = 50
-minBatches = 40
-trainFreq = 1 #train when totStepNumber%trainFreq == 0
+batchSize = 32
+minBatches = 50 #number of batches before starting training
+trainFreq = 100 #train when totStepNumber%trainFreq == 0
+numTrainBatches = 100 #number of batches that are trained (adjust alongside trainFreq) stops needing to load session so many times
 setNetFreq = 10
-maxExperience = 200 #oldest batch is removed once experience = (maxExperience+1)*batchSize
+maxExperience = 500 #oldest batch is removed once experience = (maxExperience+1)*batchSize
 
 #meanObs = np.array([0, 0.6, 0, -0.6, 0, 0, 0, 0])
 #stdObs = np.array([0.3, 0.3, 0.6, 0.5, 0.5, 0.4, 0.1, 0.1])
@@ -46,7 +47,7 @@ yalpha = []
 environment = gym.make('LunarLander-v2')
 initObs = environment.reset()
 meanObs, stdObs = randomPlay.randomPlay(environment)
-agent = dqn.dqn(environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, dropOutKeepProb, initObs, maxExperience, trainFreq, setNetFreq, lrSplit, targetUpdateFrac, meanObs, stdObs)
+agent = dqn.dqn(environment, alpha1, alpha2, gamma, epsilon, hiddenNodes, batchSize, minBatches, dropOutKeepProb, initObs, maxExperience, trainFreq, numTrainBatches, setNetFreq, lrSplit, targetUpdateFrac, meanObs, stdObs)
 streak = 0
 for i in range(maxIter):
     if i%20 == 0:
@@ -63,7 +64,8 @@ for i in range(maxIter):
     agent.finalScore = agent.score
     agent.reset()
     #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
-    agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
+    #agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
+    agent.epsilon=max(agent.epsilon*0.995, mineps)
     #agent.alpha = agent.epsilon
 
 runEpisode.play(environment, agent, True)
