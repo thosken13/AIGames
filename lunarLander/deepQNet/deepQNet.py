@@ -24,7 +24,8 @@ targetUpdateFrac = 0.01####
 #alphaRate = 35  
 gamma = 0.99     
 epsilon = 1     
-mineps = 0.08   
+mineps = 0.1
+epsFactor = 0.996
 epsilonRate = 50#100
 hiddenNodes = 50
 dropOutKeepProb = 0.5#############################
@@ -66,7 +67,7 @@ for i in range(maxIter):
     agent.reset()
     #agent.alpha = max(alpha * (0.85 ** (i//alphaRate)), minAlpha)
     #agent.epsilon = max(min(1, 1 - math.log10((i+1)/epsilonRate)), mineps)
-    agent.epsilon=max(agent.epsilon*0.995, mineps)
+    agent.epsilon=max(agent.epsilon*epsFactor, mineps)
     #agent.alpha = agent.epsilon
 
 runEpisode.play(environment, agent, True)
