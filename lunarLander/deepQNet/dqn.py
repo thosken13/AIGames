@@ -171,7 +171,7 @@ class dqn:
                         target[i,action[i]] = reward[i] + discountFutureReward[i]
                     else:
                         target[i,action[i]] = reward[i]
-                feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.movingScore, self.netDict["learningRate"]: learnRate}
+                feedDict = {self.netDict["in"]: prevObs, self.netDict["keepProb"]: self.keepProb, self.netDict["target"]: target, self.netDict["score"]: self.movingScore(), self.netDict["learningRate"]: learnRate}
                 #DO DICTIONARY COMPREHENSION ABOVE AND FOR OTHER FEEDdICT
                 #OR TRY TUPLE AGAIN
                 sess.run(self.netDict["optimizer"], feed_dict=feedDict)
