@@ -132,6 +132,14 @@ class dqn:
         
     def qApproxNet(self, observation, trainNet=True): #WAS ALWAYS USING TARGET VALS, SHOULDN'T FOR ACTION CHOICE!!
         "calculates approximation for Q values for all actions at state"
+        #
+        #
+        #
+        #SHOULD I BE LOADING A TRAINED NETWORK?!?!?!?!!?!?
+        #maybe not, is variables from netChoice enough?
+        #
+        #
+        
         with tf.Session(graph=self.netDict["graph"]) as sess:
             netChoice = self.chooseNet(trainNet)
             qVals = sess.run(self.netDict["out"], feed_dict={self.netDict["in"]: observation, self.netDict["variables"][0]: netChoice[0], self.netDict["variables"][1]: netChoice[1], self.netDict["variables"][2]: netChoice[2], self.netDict["variables"][3]: netChoice[3], self.netDict["variables"][4]: netChoice[4], self.netDict["variables"][5]: netChoice[5], self.netDict["keepProb"]: 1})

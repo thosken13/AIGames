@@ -1,3 +1,2 @@
-model_checkpoint_path: "savedNetwork1"
+model_checkpoint_path: "savedNetwork2"
 all_model_checkpoint_paths: "savedNetwork2"
-all_model_checkpoint_paths: "savedNetwork1"
