@@ -5,14 +5,18 @@ class CNNAgent:
     """
         An RL agent intended to learn how to play minesweeper.
     """
-    def __init__(self, boardSize=16, learningRate=0.01, filterSize=[3, 3], gamma=0):
+    def __init__(self, boardSize=16, learningRate=0.01, filterSize=[3, 3], gamma=0, epsilonDecay=0.996, minEps=0.05):
         self.lr = learningRate
         self.gamma = gamma
+        self.epsilon = 1
+        self.epsilonDecay = epsilonDecay
+        self.minEps = minEps
         self.boardSize = boardSize
         self.filterSize = filterSize
         self.session = None#tf.Session(graph=self.netDict["graph"])
         self.netDict = self.buildModel()
-        self.summarySteps=0
+        self.totSteps = 0
+        self.summarySteps = 0
         
     def buildModel(self):
         """
@@ -47,6 +51,7 @@ class CNNAgent:
         summaryWriter = tf.summary.FileWriter("tensorboardFiles"+str(time.time()), graph=g)
         
         netDict = {"graph": g, "in": inputLayer, "out": convOut, "target": target, 
+                   "cost": cost,
                    "optimizer": optimizer, "learningRate": learnRate, 
                    "summaryWriter": summaryWriter, "summary": summary}
         return netDict
@@ -58,13 +63,17 @@ class CNNAgent:
         self.netDict["summaryWriter"].flush()
         self.summarySteps+=1    
     
+    
     def action(self, board):
-        feedDict = {self.netDict["in"]: np.reshape(board, (-1, self.boardSize, self.boardSize, 1))}
-        outPut = self.session.run(self.netDict["out"], feed_dict=feedDict)
-        print(outPut)
-        indxMaxVal = np.unravel_index(np.argmax(outPut), outPut.shape)
-        print(indxMaxVal)
-        return indxMaxVal[1:-1]
+        if np.random.random() > self.epsilon:
+            feedDict = {self.netDict["in"]: np.reshape(board, (-1, self.boardSize, self.boardSize, 1))}
+            outPut = self.session.run(self.netDict["out"], feed_dict=feedDict)
+            action = np.unravel_index(np.argmax(outPut), outPut.shape)[1:-1]
+        else:
+            action = tuple(np.random.randint(self.boardSize, size=2))
+        self.totSteps += 1
+        self.epsilon = max(self.epsilon*self.epsilonDecay, self.minEps)
+        return action
     
     def update(self):
         pass
