@@ -121,6 +121,7 @@ class MineSweeper:
             action is the position that has been chosen.
         """
         if self.mines[action]: #if hit a mine, return score and end game
+            print("BOOOM!!")
             return -100, True
         
         else:
