@@ -1,6 +1,6 @@
 import tensorflow as tf
 import time
-
+import numpy as np
 class CNNAgent:
     """
         An RL agent intended to learn how to play minesweeper.
@@ -10,6 +10,7 @@ class CNNAgent:
         self.gamma = gamma
         self.boardSize = boardSize
         self.filterSize = filterSize
+        self.session = None#tf.Session(graph=self.netDict["graph"])
         self.netDict = self.buildModel()
         self.summarySteps=0
         
@@ -37,12 +38,17 @@ class CNNAgent:
                 tf.summary.scalar("cost", cost)
             summary = tf.summary.merge_all()
             init = tf.global_variables_initializer()
-        with tf.Session(graph=g) as sess:
-            sess.run(init)
-            summaryWriter = tf.summary.FileWriter("tensorboardFiles"+str(time.time()), graph=g)
+        #with tf.Session(graph=g) as sess:
+        #    sess.run(init)
+        #    summaryWriter = tf.summary.FileWriter("tensorboardFiles"+str(time.time()), graph=g)
+        
+        self.session = tf.Session(graph=g)
+        self.session.run(init)
+        summaryWriter = tf.summary.FileWriter("tensorboardFiles"+str(time.time()), graph=g)
+        
         netDict = {"graph": g, "in": inputLayer, "out": convOut, "target": target, 
                    "optimizer": optimizer, "learningRate": learnRate, 
-                   "summaryWriter": summaryWriter, "summary": summary, "init": init}
+                   "summaryWriter": summaryWriter, "summary": summary}
         return netDict
     
     
@@ -50,26 +56,21 @@ class CNNAgent:
         summaryString = sess.run(self.netDict["summary"], feed_dict=feedDict)
         self.netDict["summaryWriter"].add_summary(summaryString, self.summarySteps)
         self.netDict["summaryWriter"].flush()
-        self.summarySteps+=1
-   
-    def testGraph(self):
-        with tf.Session(graph=self.netDict["graph"]) as sess:
-            sess.run(self.netDict["init"])
-        
-            inputTensor = tf.random_normal([3, self.boardSize, self.boardSize, 1], mean=-1, stddev=4)
-            inputTensor = inputTensor.eval()
-            for i in range(100):
-                feedDict = {self.netDict["in"] : inputTensor, self.netDict["target"]: inputTensor}
-                sess.run(self.netDict["out"], feed_dict=feedDict )
-                self.writeSummary(sess, feedDict)
-        
-    
+        self.summarySteps+=1    
     
     def action(self, board):
-        return (3,3)
+        feedDict = {self.netDict["in"]: np.reshape(board, (-1, self.boardSize, self.boardSize, 1))}
+        outPut = self.session.run(self.netDict["out"], feed_dict=feedDict)
+        print(outPut)
+        indxMaxVal = np.unravel_index(np.argmax(outPut), outPut.shape)
+        print(indxMaxVal)
+        return indxMaxVal[1:-1]
     
     def update(self):
         pass
+        """
+        feedDict = {self.netDict["convOut"] : , self.netDict["cost"] : }
+        self.writeSummary(self.session, feedDict)"""
     
     
     
