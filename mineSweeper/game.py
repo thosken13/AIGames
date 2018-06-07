@@ -3,7 +3,7 @@ import random
 
 np.set_printoptions(linewidth=132)
 
-class mineSweeper:
+class MineSweeper:
     """
         Mine Sweeper game.
         mines: 0 = no mine
@@ -57,7 +57,7 @@ class mineSweeper:
 
     def uncoverSquare(self, position):
         """
-            Add value of square at position to the board and return the value.
+            Add the value of the square (num of mines in neigbouring squares) at position to the board and return the value.
         """
         if self.board[position] == -9:
             self.explored += 1
@@ -120,7 +120,7 @@ class mineSweeper:
             The reward is the number of uncovered square, or -100 for a loss.
             action is the position that has been chosen.
         """
-        if self.mines[action]:
+        if self.mines[action]: #if hit a mine, return score and end game
             return -100, True
         
         else:
