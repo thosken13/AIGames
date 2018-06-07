@@ -8,13 +8,15 @@ def play(agent, train=True):
     """
     
     gamePlay = game.MineSweeper()
+    print(gamePlay.board)
     
     done = False
     while not done:
-        print("-")
         boardState = gamePlay.board
         action = agent.action(boardState)
+        print(action)
         reward, done = gamePlay.gameStep(action)
+        print(gamePlay.board)
         if train:
             agent.update()
             
