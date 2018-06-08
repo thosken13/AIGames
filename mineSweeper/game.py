@@ -129,7 +129,10 @@ class MineSweeper:
             if val == 0:
                 self.uncoverMultiSquare(action)
             reward = self.numUncovered() - 1 #so that shouldn't choose uncovered square (would have 0 reward)
-            return reward, False
+            done = False
+            if self.explored == self.boardSize**2 - self.nMines:
+                done = True
+            return reward, done
         
         
         
