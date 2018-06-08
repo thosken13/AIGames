@@ -1,11 +1,13 @@
 import tensorflow as tf
 import time
 import numpy as np
+import random
+
 class CNNAgent:
     """
         An RL agent intended to learn how to play minesweeper.
     """
-    def __init__(self, boardSize=16, learningRate=0.01, filterSize=[3, 3], gamma=0, epsilonDecay=0.996, minEps=0.05):
+    def __init__(self, boardSize=16, learningRate=0.01, filterSize=[3, 3], gamma=0, epsilonDecay=0.996, minEps=0.05, minExp=100, batchSize=32):
         self.lr = learningRate
         self.gamma = gamma
         self.epsilon = 1
@@ -16,7 +18,11 @@ class CNNAgent:
         self.session = None#tf.Session(graph=self.netDict["graph"])
         self.netDict = self.buildModel()
         self.totSteps = 0
+        self.minExp = minExp #minimum amount of experience before training
+        self.batchSize = batchSize
         self.summarySteps = 0
+        self.experience=[]
+        self.prevBoard=np.ones((boardSize,boardSize))*-9
         
     def buildModel(self):
         """
@@ -65,6 +71,10 @@ class CNNAgent:
     
     
     def action(self, board):
+        """
+            Take an action, either via an epsilon-greedy policy, or from the
+            learnt policy.
+        """
         if np.random.random() > self.epsilon:
             feedDict = {self.netDict["in"]: np.reshape(board, (-1, self.boardSize, self.boardSize, 1))}
             outPut = self.session.run(self.netDict["out"], feed_dict=feedDict)
@@ -75,11 +85,70 @@ class CNNAgent:
         self.epsilon = max(self.epsilon*self.epsilonDecay, self.minEps)
         return action
     
-    def update(self):
-        pass
+    def getBatchInList(self):
+        """
+            Get a batch of inputs for training.
+            [previous state, action, current state, reward, done]
+        """
+        batchList = random.sample(self.experience, self.batchSize)
+        batchIn = []
+        for experience in batchList:
+            batchIn.append(experience[0])
+        batchIn = np.reshape(np.array(batchIn), (self.batchSize, self.boardSize, self.boardSize, 1))
+        #print("batchIn", batchIn, np.shape(batchIn))
+        return batchIn, batchList
+    
+    def targetCalc(self, batchList):
+        """
+            Calculate the targets for the batch of inputs.
+        """
+        prevStates = []
+        actions = []
+        currentStates = []
+        rewards = []
+        dones = []
+        for i in range(len(batchList)):
+            prevStates.append([batchList[i][0]])
+            actions.append([batchList[i][1]])
+            currentStates.append([batchList[i][2]])
+            rewards.append([batchList[i][3]])
+            dones.append([batchList[i][4]])
+        targets = []
+        #get current prediction of action values for previous state (so values for actions not taken will not conribute to error)
+        feedDict1 = {self.netDict["in"]: np.reshape(np.array(prevStates), (self.batchSize, self.boardSize, self.boardSize, 1))}
+        targets = self.session.run(self.netDict["out"], feed_dict=feedDict1) 
+        #print("target", target, np.shape(target))
+        for i in range(len(batchList)):
+            #print("currenstate dict2", np.shape(np.reshape(currentStates[i], (1, self.boardSize, self.boardSize, 1))))
+            if not dones[i]:
+                #set action value for action taken to the reward gained + the discounted future reward
+                feedDict2 = {self.netDict["in"]: np.reshape(currentStates[i], (1, self.boardSize, self.boardSize, 1))}
+                valueCurrent = self.session.run(self.netDict["out"], feed_dict=feedDict2) #get prediction of action values for new state
+                futureReward = np.max(valueCurrent) #max predicted future reward
+                targets[i][actions[i]] = rewards[i] + self.gamma*futureReward
+            else:
+                #set action value for action taken to the reward gained
+                targets[i][actions[i]] = rewards[i]
+        return targets
+        
+    def update(self, action, board, reward, done):
+        """
+            Train the agent.
+        """
+        self.experience.append([self.prevBoard, action, board, reward, done]) #save new experience
+        self.prevBoard = board
+        if self.totSteps > self.minExp: #train after building a buffer of experience
+            batchIn, batchList = self.getBatchInList() #get a batch of inputs and (the same) batch list of [previous state, action, current state, reward, done]
+            batchTarget = self.targetCalc(batchList)
+            feedDict = {self.netDict["in"] : batchIn, self.netDict["target"] : batchTarget, self.netDict["learningRate"]: self.lr}
+            self.session.run(self.netDict["optimizer"], feed_dict=feedDict)
+        
         """
         feedDict = {self.netDict["convOut"] : , self.netDict["cost"] : }
         self.writeSummary(self.session, feedDict)"""
     
+    def reset(self):
+        "reset for new game"
+        self.prevBoard=np.ones((self.boardSize, self.boardSize))*-9
     
     
