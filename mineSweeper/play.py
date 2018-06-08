@@ -12,14 +12,16 @@ def play(agent, train=True):
     
     done = False
     while not done:
-        boardState = gamePlay.board
+        boardState = gamePlay.board #current board state
         action = agent.action(boardState)
         print(action)
         reward, done = gamePlay.gameStep(action)
-        print(gamePlay.board)
+        print(gamePlay.board) #new board state
         if train:
-            agent.update()
+            agent.update(action, gamePlay.board, reward, done)
             
 print("running")
 agent = CNNAgent.CNNAgent()
-play(agent)
+for i in range(50): #play 50 games
+    play(agent)
+    agent.reset()
