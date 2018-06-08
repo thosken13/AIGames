@@ -7,7 +7,7 @@ class CNNAgent:
     """
         An RL agent intended to learn how to play minesweeper.
     """
-    def __init__(self, boardSize=16, learningRate=0.01, filterSize=[3, 3], gamma=0.9, epsilonDecay=0.999, minEps=0.05, minExp=100, batchSize=32):
+    def __init__(self, boardSize=16, learningRate=0.01, filterSize=[3, 3], gamma=0.99, epsilonDecay=0.999, minEps=0.05, minExp=100, batchSize=32):
         self.lr = learningRate
         self.gamma = gamma
         self.epsilon = 1
@@ -39,7 +39,8 @@ class CNNAgent:
                                          filters=1, 
                                          kernel_size=self.filterSize, 
                                          padding="same", 
-                                         activation=tf.nn.sigmoid)
+                                         activation=tf.nn.sigmoid,
+                                         name="conv")
             with tf.name_scope("optimizer"):
                 target = tf.placeholder(tf.float32, shape=[None, self.boardSize, self.boardSize, 1], name="target")
                 cost = tf.losses.mean_squared_error(target, convOut) #try alternatives?
@@ -50,11 +51,10 @@ class CNNAgent:
                 tf.summary.scalar("score", score)
                 tf.summary.histogram("convOut", convOut)
                 tf.summary.scalar("cost", cost)
+                filterWeights = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'conv/kernel')[0]
+                tf.summary.image("filter", tf.reshape(filterWeights, [1,3,3,1]))
             summary = tf.summary.merge_all()
             init = tf.global_variables_initializer()
-        #with tf.Session(graph=g) as sess:
-        #    sess.run(init)
-        #    summaryWriter = tf.summary.FileWriter("tensorboardFiles"+str(time.time()), graph=g)
         
         self.session = tf.Session(graph=g)
         self.session.run(init)
