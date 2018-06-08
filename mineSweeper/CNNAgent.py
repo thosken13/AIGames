@@ -7,7 +7,7 @@ class CNNAgent:
     """
         An RL agent intended to learn how to play minesweeper.
     """
-    def __init__(self, boardSize=16, learningRate=0.01, filterSize=[3, 3], gamma=0, epsilonDecay=0.996, minEps=0.05, minExp=100, batchSize=32):
+    def __init__(self, boardSize=16, learningRate=0.01, filterSize=[3, 3], gamma=0.9, epsilonDecay=0.999, minEps=0.05, minExp=100, batchSize=32):
         self.lr = learningRate
         self.gamma = gamma
         self.epsilon = 1
@@ -23,6 +23,7 @@ class CNNAgent:
         self.summarySteps = 0
         self.experience=[]
         self.prevBoard=np.ones((boardSize,boardSize))*-9
+        self.score=0
         
     def buildModel(self):
         """
@@ -31,6 +32,7 @@ class CNNAgent:
         """
         g = tf.Graph()
         with g.as_default():
+            tf.set_random_seed(1)
             with tf.name_scope("convNet"):
                 inputLayer = tf.placeholder(tf.float32, shape=[None, self.boardSize, self.boardSize, 1], name="inputBoard")
                 convOut = tf.layers.conv2d(inputs=inputLayer, 
@@ -44,6 +46,8 @@ class CNNAgent:
                 learnRate = tf.placeholder(tf.float32, name="learningRate")
                 optimizer = tf.train.AdamOptimizer(learning_rate=learnRate).minimize(cost)
             with tf.name_scope("summaries"):
+                score = tf.placeholder(tf.float32, name="score")
+                tf.summary.scalar("score", score)
                 tf.summary.histogram("convOut", convOut)
                 tf.summary.scalar("cost", cost)
             summary = tf.summary.merge_all()
@@ -57,7 +61,7 @@ class CNNAgent:
         summaryWriter = tf.summary.FileWriter("tensorboardFiles"+str(time.time()), graph=g)
         
         netDict = {"graph": g, "in": inputLayer, "out": convOut, "target": target, 
-                   "cost": cost,
+                   "score": score,
                    "optimizer": optimizer, "learningRate": learnRate, 
                    "summaryWriter": summaryWriter, "summary": summary}
         return netDict
@@ -82,7 +86,6 @@ class CNNAgent:
         else:
             action = tuple(np.random.randint(self.boardSize, size=2))
         self.totSteps += 1
-        self.epsilon = max(self.epsilon*self.epsilonDecay, self.minEps)
         return action
     
     def getBatchInList(self):
@@ -142,13 +145,14 @@ class CNNAgent:
             batchTarget = self.targetCalc(batchList)
             feedDict = {self.netDict["in"] : batchIn, self.netDict["target"] : batchTarget, self.netDict["learningRate"]: self.lr}
             self.session.run(self.netDict["optimizer"], feed_dict=feedDict)
-        
-        """
-        feedDict = {self.netDict["convOut"] : , self.netDict["cost"] : }
-        self.writeSummary(self.session, feedDict)"""
+            #summaries
+            feedDict = {self.netDict["in"] : batchIn, self.netDict["target"] : batchTarget, self.netDict["score"]: self.score}
+            self.writeSummary(self.session, feedDict)
     
     def reset(self):
         "reset for new game"
         self.prevBoard=np.ones((self.boardSize, self.boardSize))*-9
+        self.epsilon = max(self.epsilon*self.epsilonDecay, self.minEps)
+        self.score=0
     
     
