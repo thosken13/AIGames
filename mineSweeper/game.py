@@ -120,6 +120,10 @@ class MineSweeper:
             The reward is the number of uncovered square, or -100 for a loss.
             action is the position that has been chosen.
         """
+        if action[0] not in range(self.boardSize):
+           action[0] = np.random.randint(self.boardSize)
+        if action[1] not in range(self.boardSize):
+           action[1] = np.random.randint(self.boardSize)
         if self.mines[action]: #if hit a mine, return score and end game
             print("BOOOM!!")
             return -100, True
@@ -128,10 +132,11 @@ class MineSweeper:
             val = self.uncoverSquare(action)
             if val == 0:
                 self.uncoverMultiSquare(action)
-            reward = self.numUncovered() - 1 #so that shouldn't choose uncovered square (would have 0 reward)
+            reward = self.numUncovered()# - 1 #so that shouldn't choose uncovered square (would have 0 reward)
             done = False
             if self.explored == self.boardSize**2 - self.nMines:
                 done = True
+                print("Win!!")
             return reward, done
         
         

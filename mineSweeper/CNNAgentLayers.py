@@ -8,7 +8,7 @@ class CNNAgent:
         An RL agent intended to learn how to play minesweeper.
         Splits the board into layers for each square value (0,...,8), unexplored and edges of map
     """
-    def __init__(self, boardSize=16, learningRate=0.01, filterSize=[5, 5], nFilters=64, gamma=0.99, epsilonDecay=0.999, minEps=0.05, minExp=100, batchSize=32):
+    def __init__(self, boardSize=16, learningRate=0.1, filterSize=3, nFilters=64, gamma=0.0, epsilonDecay=0.9995, minEps=0.05, minExp=100, batchSize=32):
         self.lr = learningRate
         self.gamma = gamma
         self.epsilon = 1
@@ -26,6 +26,7 @@ class CNNAgent:
         self.experience=[]
         self.prevBoard=self.splitBoardLayers(np.ones((self.boardSize, self.boardSize))*-9)
         self.score=0
+        self.wins=0
         
     def buildModel(self):
         """
@@ -37,39 +38,67 @@ class CNNAgent:
             tf.set_random_seed(1)
             with tf.name_scope("convNet"):
                 inputLayer = tf.placeholder(tf.float32, shape=[None, self.boardSize+1, self.boardSize+1, 11], name="inputBoard")#boardSize+1 because have layer for wall (which is outside board)
-                conv1 = tf.layers.conv3d(inputs=inputLayer, 
+                conv1 = tf.layers.conv2d(inputs=inputLayer, 
                                          filters=self.nFilters, 
-                                         kernel_size=(11, self.filterSize, self.filterSize), 
-                                         padding="same", 
-                                         activation=tf.nn.sigmoid,#negatives matter
-                                         name="conv1")
-                conv2 = tf.layers.conv2d(inputs=conv1, 
-                                         filters=1, 
                                          kernel_size=self.filterSize, 
                                          padding="same", 
-                                         activation=tf.nn.sigmoid,#negatives matter
+                                         activation=tf.nn.relu,
+                                         name="conv1")
+                conv2 = tf.layers.conv2d(inputs=conv1, 
+                                         filters=self.nFilters, 
+                                         kernel_size=self.filterSize, 
+                                         padding="same", 
+                                         activation=tf.nn.relu,
                                          name="conv2")
+                conv3 = tf.layers.conv2d(inputs=conv2, 
+                                         filters=self.nFilters, 
+                                         kernel_size=self.filterSize, 
+                                         padding="same", 
+                                         activation=tf.nn.relu,
+                                         name="conv3")
+                conv4 = tf.layers.conv2d(inputs=conv3, 
+                                         filters=self.nFilters, 
+                                         kernel_size=self.filterSize, 
+                                         padding="same", 
+                                         activation=tf.nn.relu,
+                                         name="conv4")
+                conv5 = tf.layers.conv2d(inputs=conv4, 
+                                         filters=self.nFilters, 
+                                         kernel_size=self.filterSize, 
+                                         padding="same", 
+                                         activation=tf.nn.relu,
+                                         name="conv5")
+                out = tf.layers.conv2d(inputs=conv5, 
+                                         filters=1, 
+                                         kernel_size=1, 
+                                         padding="same", 
+                                         activation=tf.nn.sigmoid,#negatives matter
+                                         name="out")
             with tf.name_scope("optimizer"):
-                target = tf.placeholder(tf.float32, shape=[None, self.boardSize, self.boardSize, 1], name="target")
+                target = tf.placeholder(tf.float32, shape=[None, self.boardSize+1, self.boardSize+1, 1], name="target")
                 cost = tf.losses.mean_squared_error(target, out) #try alternatives?
                 learnRate = tf.placeholder(tf.float32, name="learningRate")
                 optimizer = tf.train.AdamOptimizer(learning_rate=learnRate).minimize(cost)
             with tf.name_scope("summaries"):
                 score = tf.placeholder(tf.float32, name="score")
-                tf.summary.scalar("score", score)
+                tf.summary.scalar("% Explored", score)
+                nWins = tf.placeholder(tf.float32, name="wins")
+                tf.summary.scalar("Wins", nWins)
+                eps = tf.placeholder(tf.float32, name="epsilon")
+                tf.summary.scalar("epsilon", eps)
                 tf.summary.histogram("conv1", conv1)
                 tf.summary.scalar("cost", cost)
-                filterWeights = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'conv1/kernel')[0]
-                tf.summary.image("filter", tf.reshape(filterWeights, [1,self.filterSize,self.filterSize,1]))
+                #filterWeights = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'conv1/kernel')[0]
+                #tf.summary.image("filter", tf.reshape(filterWeights, [1,self.filterSize,self.filterSize,1]))
             summary = tf.summary.merge_all()
             init = tf.global_variables_initializer()
         
         self.session = tf.Session(graph=g)
         self.session.run(init)
-        summaryWriter = tf.summary.FileWriter("tensorboardFiles"+str(time.time()), graph=g)
+        summaryWriter = tf.summary.FileWriter("tensorboardFiles", graph=g)#+str(time.time()), graph=g)
         
-        netDict = {"graph": g, "in": inputLayer, "conv1": conv1, "target": target, 
-                   "score": score,
+        netDict = {"graph": g, "in": inputLayer, "out": out, "target": target, 
+                   "score": score, "wins": nWins, "epsilon": eps,
                    "optimizer": optimizer, "learningRate": learnRate, 
                    "summaryWriter": summaryWriter, "summary": summary}
         return netDict
@@ -90,7 +119,7 @@ class CNNAgent:
                 if board[i,j] == -9: #set "on" for uncovered squares in the uncovered square layer
                     boardLayers[i,j,-2] = 1
                 else:
-                    boardLayers[i, j, board[i,j]] = 1 #use value of square to select correct layer
+                    boardLayers[i, j, int(board[i,j])] = 1 #use value of square to select correct layer
         for i in range(self.boardSize+1):
             for j in range(self.boardSize+1):
                 if i==0 or j==0 or i==self.boardSize or j==self.boardSize:
@@ -105,7 +134,8 @@ class CNNAgent:
         if np.random.random() > self.epsilon:
             feedDict = {self.netDict["in"]: np.reshape(self.splitBoardLayers(board), (1, self.boardSize+1, self.boardSize+1, 11))}
             outPut = self.session.run(self.netDict["out"], feed_dict=feedDict)
-            action = np.unravel_index(np.argmax(outPut), outPut.shape)[1:-1]
+            action = np.unravel_index(np.argmax(outPut[0,1:-1,1:-1,0]), (1,self.boardSize,self.boardSize,1))[1:-1]
+           #UNSURE OF SHAPES ABOVE, AND EVERYWHERE REALLY
         else:
             action = tuple(np.random.randint(self.boardSize, size=2))
         self.totSteps += 1
@@ -164,13 +194,15 @@ class CNNAgent:
         board = self.splitBoardLayers(board)
         self.experience.append([self.prevBoard, action, board, reward, done]) #save new experience
         self.prevBoard = board
-        if self.totSteps > self.minExp: #train after building a buffer of experience
+        if self.totSteps > self.minExp and self.totSteps%10 == 0: #train after building a buffer of experience
             batchIn, batchList = self.getBatchInList() #get a batch of inputs and (the same) batch list of [previous state, action, current state, reward, done]
             batchTarget = self.targetCalc(batchList)
             feedDict = {self.netDict["in"] : batchIn, self.netDict["target"] : batchTarget, self.netDict["learningRate"]: self.lr}
             self.session.run(self.netDict["optimizer"], feed_dict=feedDict)
             #summaries
-            feedDict = {self.netDict["in"] : batchIn, self.netDict["target"] : batchTarget, self.netDict["score"]: self.score}
+            feedDict = {self.netDict["in"] : batchIn, self.netDict["target"] : batchTarget, 
+                        self.netDict["score"]: self.score, self.netDict["wins"]: self.wins,
+                        self.netDict["epsilon"]: self.epsilon}
             self.writeSummary(self.session, feedDict)
     
     def reset(self):

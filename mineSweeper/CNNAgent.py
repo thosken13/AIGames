@@ -48,7 +48,7 @@ class CNNAgent:
                 optimizer = tf.train.AdamOptimizer(learning_rate=learnRate).minimize(cost)
             with tf.name_scope("summaries"):
                 score = tf.placeholder(tf.float32, name="score")
-                tf.summary.scalar("score", score)
+                tf.summary.scalar("% Exploration ", score)
                 tf.summary.histogram("convOut", convOut)
                 tf.summary.scalar("cost", cost)
                 filterWeights = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'conv/kernel')[0]
@@ -140,7 +140,7 @@ class CNNAgent:
         """
         self.experience.append([self.prevBoard, action, board, reward, done]) #save new experience
         self.prevBoard = board
-        if self.totSteps > self.minExp: #train after building a buffer of experience
+        if self.totSteps > self.minExp and self.totStep%10 == 0: #train after building a buffer of experience
             batchIn, batchList = self.getBatchInList() #get a batch of inputs and (the same) batch list of [previous state, action, current state, reward, done]
             batchTarget = self.targetCalc(batchList)
             feedDict = {self.netDict["in"] : batchIn, self.netDict["target"] : batchTarget, self.netDict["learningRate"]: self.lr}

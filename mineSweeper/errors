@@ -1,0 +1,3 @@
+To fix:
+        -index error -17 in game. Test all actions to see what produces this error
+        -Check all boards are being reshaped sensibly throught agent

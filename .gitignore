@@ -5,6 +5,7 @@
 **/*.index
 **/*.meta
 
-**/*tensorBoardFiles
+**/*tensorBoardFiles*
+**/*tensorboardFiles*
 
 mineSweeper/implementationIdeas
