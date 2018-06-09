@@ -1,6 +1,6 @@
 import numpy as np
 import game 
-import CNNAgent
+import CNNAgentLayers as CNNAgent
 
 np.random.seed(0)
 
@@ -21,7 +21,7 @@ def play(agent, train=True):
         #print(gamePlay.board) #new board state
         agent.score = gamePlay.explored
         if train:
-            agent.update(action, gamePlay.board, reward, done)
+            agent.update(action, gamePlay.board, reward-1, done) #reward -1 so that incentivise short game
             
 print("running")
 agent = CNNAgent.CNNAgent()
