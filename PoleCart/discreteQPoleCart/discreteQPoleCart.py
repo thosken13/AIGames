@@ -1,7 +1,7 @@
 import gym
 import QLearnTabular
 import sys
-sys.path.append('../')
+sys.path.append('../../')
 import runEpisode
 import matplotlib.pyplot as plt
 import numpy as np
