@@ -15,6 +15,7 @@ class NNAgent:
         self.steps=0
         
     def buildModel(self):
+        tf.set_random_seed(1234)
         with tf.name_scope("nn"):
             inputLayer = tf.placeholder(shape=[None, 4], dtype=tf.float32) #4 observations in polecart
             layers = [inputLayer]
@@ -30,8 +31,6 @@ class NNAgent:
             optimizer = tf.train.AdamOptimizer(learning_rate=learnRate).minimize(cost)
         with tf.name_scope("summaries"):
             score = tf.placeholder(tf.float32, name="score")
-            #for i, l in enumerate(layers[1:]):
-            #    tf.summary.histogram("layer "+str(i+1), l)
             tf.summary.scalar("score ", score)
             tf.summary.scalar("cost", cost)
             for var in tf.trainable_variables():
@@ -40,7 +39,6 @@ class NNAgent:
             
         init = tf.global_variables_initializer()
         self.session = tf.Session()
-        tf.set_random_seed(1234)
         self.session.run(init)
         summaryWriter = tf.summary.FileWriter("tensorboard/"+self.newTBDir(), graph=tf.get_default_graph())
                 
