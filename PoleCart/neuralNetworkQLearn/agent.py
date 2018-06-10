@@ -4,8 +4,9 @@ import numpy as np
 import os
 
 class NNAgent:
-    def __init__(self, alpha=0.01, gamma=0.99, epsilonDecay=0.99, 
+    def __init__(self, environment, alpha=0.01, gamma=0.99, epsilonDecay=0.99,
                  nNeuronsHidLayers=[50,50,50]):
+        self.environment = environment
         self.learnRate=alpha
         self.gamma=gamma
         self.epsilon=1
@@ -13,7 +14,9 @@ class NNAgent:
         self.nNeuronsHidLayers = nNeuronsHidLayers
         self.netDict=self.buildModel()
         self.steps=0
-        
+
+        np.random.seed(5)
+
     def buildModel(self):
         tf.set_random_seed(1234)
         with tf.name_scope("nn"):
@@ -36,18 +39,18 @@ class NNAgent:
             for var in tf.trainable_variables():
                 tf.summary.histogram(var.name, var)
         summary = tf.summary.merge_all()
-            
+
         init = tf.global_variables_initializer()
         self.session = tf.Session()
         self.session.run(init)
         summaryWriter = tf.summary.FileWriter("tensorboard/"+self.newTBDir(), graph=tf.get_default_graph())
-                
-        netDict = {"in": inputLayer, "out": layers[-1], "target": target, 
+
+        netDict = {"in": inputLayer, "out": layers[-1], "target": target,
                    "score": score,
-                   "optimizer": optimizer, "learningRate": learnRate, 
+                   "optimizer": optimizer, "learningRate": learnRate,
                    "summaryWriter": summaryWriter, "summary": summary}
         return netDict
-        
+
     def newTBDir(self):
         "Produce name for new tensorboard run directory"
         files = os.listdir("tensorboard/")
@@ -56,29 +59,29 @@ class NNAgent:
             if int(f[-1]) > lastRunN:
                 lastRunN = int(f[-1])
         return "run"+str(int(lastRunN)+1)
-        
+
     def writeSummary(self, feedDict):
         summaryString = self.session.run(self.netDict["summary"], feed_dict=feedDict)
         self.netDict["summaryWriter"].add_summary(summaryString, self.steps)
-        
-        
+
+    def action(self, observations):
+        """
+            Choose an action either from a random policy, or using neural net.
+        """
+        if np.random.random() < self.epsilon:
+            self.environment.action_space.sample()
+        else:
+            pass
+
     def test(self):
         x = np.reshape(np.array([1,2,3,4]), (1,4))
         y = np.reshape(np.array([5,6]), (1,2))
-        summaryString, opt = self.session.run([self.netDict["summary"], self.netDict["optimizer"]], 
-                                                feed_dict={self.netDict["in"]: x, self.netDict["target"]: y, 
+        summaryString, opt = self.session.run([self.netDict["summary"], self.netDict["optimizer"]],
+                                                feed_dict={self.netDict["in"]: x, self.netDict["target"]: y,
                                                            self.netDict["score"]: 5, self.netDict["learningRate"]: 0.01})
         print(opt)
         self.netDict["summaryWriter"].add_summary(summaryString, self.steps)
         self.netDict["summaryWriter"].flush()
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+    def testNpSeed(self):
+        for i in range(5):
+            print(np.random.random())

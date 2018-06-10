@@ -2,7 +2,7 @@ import gym
 import sys
 sys.path.append('../../')
 import runEpisode
-#import agent as nnAgent
+import agent as nnAgent
 
 def testAndExperiment():
     env = gym.make('CartPole-v0')
@@ -15,8 +15,9 @@ def testAndExperiment():
         env.seed(0)
     for i in range(5):
         print(env.action_space.sample()) #spaces are seeded separately and apparently by a fixed seed
-    #agent = nnAgent.NNAgent()
+    agent = nnAgent.NNAgent(env)
     #agent.test()
+    agent.testNpSeed()
 
 
 
