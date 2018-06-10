@@ -1,5 +1,5 @@
-import gym
-import numpy as np
+#import gym
+#import numpy as np
 
 def play(env, agent, render):
     #print(env.action_space)
