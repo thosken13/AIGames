@@ -5,7 +5,7 @@ import random
 import os
 
 class NNAgent:
-    def __init__(self, environment, alpha=0.001, gamma=0.99, epsilonDecay=0.995,
+    def __init__(self, environment, tensorboardDir="tensorboard1/", alpha=0.001, gamma=0.99, epsilonDecay=0.995,
                  nNeuronsHidLayers=[10,10,10], batchSize=3, minExp=100):
         #RL parameters
         self.learnRate=alpha
@@ -13,6 +13,7 @@ class NNAgent:
         self.epsilonDecay=epsilonDecay
         #model and training stuff
         self.nNeuronsHidLayers = nNeuronsHidLayers
+        self.tensorboardDir=tensorboardDir
         self.netDict=self.buildModel()
         self.batchSize=batchSize
         self.minExp = minExp
@@ -58,7 +59,7 @@ class NNAgent:
         init = tf.global_variables_initializer()
         self.session = tf.Session()
         self.session.run(init)
-        summaryWriter = tf.summary.FileWriter("tensorboard/"+self.newTBDir(), graph=tf.get_default_graph())
+        summaryWriter = tf.summary.FileWriter(self.tensorboardDir+self.newTBDir(), graph=tf.get_default_graph())
 
         netDict = {"in": inputLayer, "out": layers[-1], "target": target,
                    "score": score, "epsilon": eps, "episodes": episodes,
@@ -68,7 +69,7 @@ class NNAgent:
 
     def newTBDir(self):
         "Produce name for new tensorboard run directory (next run number)."
-        files = os.listdir("tensorboard/")
+        files = os.listdir(self.tensorboardDir)
         lastRunN=0
         for f in files:
             if int(f[3:]) > lastRunN:
