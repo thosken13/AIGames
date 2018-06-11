@@ -68,8 +68,8 @@ class NNAgent:
         files = os.listdir("tensorboard/")
         lastRunN=0
         for f in files:
-            if int(f[-1]) > lastRunN:
-                lastRunN = int(f[-1])
+            if int(f[3:]) > lastRunN:
+                lastRunN = int(f[3:])
         return "run"+str(int(lastRunN)+1)
 
     def action(self, observations):
