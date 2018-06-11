@@ -5,7 +5,7 @@ import random
 import os
 
 class NNAgent:
-    def __init__(self, environment, tensorboardDir="tensorboard1/", alpha=0.001, gamma=0.99, epsilonDecay=0.995,
+    def __init__(self, environment, tensorboardDir="tensorboard/", alpha=0.001, gamma=0.99, epsilonDecay=0.995,
                  nNeuronsHidLayers=[10,10,10], batchSize=3, minExp=100):
         #RL parameters
         self.learnRate=alpha
@@ -28,6 +28,7 @@ class NNAgent:
         self.prevState=0#need to set manually at start of episode
 
         np.random.seed(5)
+        random.seed(4)
 
     def buildModel(self):
         tf.set_random_seed(1234)
