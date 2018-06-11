@@ -5,8 +5,8 @@ import random
 import os
 
 class NNAgent:
-    def __init__(self, environment, alpha=0.01, gamma=0.99, epsilonDecay=0.99,
-                 nNeuronsHidLayers=[10,10,10], batchSize=32, minExp=100):
+    def __init__(self, environment, alpha=0.001, gamma=0.99, epsilonDecay=0.995,
+                 nNeuronsHidLayers=[10,10,10], batchSize=3, minExp=100):
         #RL parameters
         self.learnRate=alpha
         self.gamma=gamma
