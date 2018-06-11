@@ -22,6 +22,7 @@ class NNAgent:
         self.steps=0
         self.epsilon=1
         self.score=0 #last episode score
+        self.episodes=0
         self.experience=[]
         self.prevState=0#need to set manually at start of episode
 
@@ -47,6 +48,8 @@ class NNAgent:
             tf.summary.scalar("score ", score)
             eps = tf.placeholder(tf.float32, name="epsilon")
             tf.summary.scalar("epsilon ", eps)
+            episodes = tf.placeholder(tf.float32, name="episodes")
+            tf.summary.scalar("episodes ", episodes)
             tf.summary.scalar("cost", cost)
             for var in tf.trainable_variables():
                 tf.summary.histogram(var.name, var)
@@ -58,7 +61,7 @@ class NNAgent:
         summaryWriter = tf.summary.FileWriter("tensorboard/"+self.newTBDir(), graph=tf.get_default_graph())
 
         netDict = {"in": inputLayer, "out": layers[-1], "target": target,
-                   "score": score, "epsilon": eps,
+                   "score": score, "epsilon": eps, "episodes": episodes,
                    "optimizer": optimizer, "learningRate": learnRate,
                    "summaryWriter": summaryWriter, "summary": summary}
         return netDict
@@ -118,7 +121,7 @@ class NNAgent:
             _, summary = self.session.run([self.netDict["optimizer"], self.netDict["summary"]],
                                 feed_dict={self.netDict["in"]: batchIn, self.netDict["target"]: batchTargets,
                                            self.netDict["score"]: self.score, self.netDict["learningRate"]: self.learnRate,
-                                           self.netDict["epsilon"]: self.epsilon})
+                                           self.netDict["epsilon"]: self.epsilon, self.netDict["episodes"]: self.episodes})
             self.netDict["summaryWriter"].add_summary(summary, self.steps)
             self.netDict["summaryWriter"].flush()
 
@@ -127,6 +130,7 @@ class NNAgent:
             Do things that need doing before the start of a new episode.
         """
         self.epsilon *= self.epsilonDecay
+        self.episodes+=1
 
     def test(self):
         x = np.reshape(np.array([1,2,3,4]), (1,4))
