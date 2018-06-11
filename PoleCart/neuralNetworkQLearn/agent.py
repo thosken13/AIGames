@@ -1,19 +1,29 @@
 import tensorflow as tf
 import time
 import numpy as np
+import random
 import os
 
 class NNAgent:
     def __init__(self, environment, alpha=0.01, gamma=0.99, epsilonDecay=0.99,
-                 nNeuronsHidLayers=[50,50,50]):
-        self.environment = environment
+                 nNeuronsHidLayers=[10,10,10], batchSize=32, minExp=100):
+        #RL parameters
         self.learnRate=alpha
         self.gamma=gamma
-        self.epsilon=1
         self.epsilonDecay=epsilonDecay
+        #model and training stuff
         self.nNeuronsHidLayers = nNeuronsHidLayers
         self.netDict=self.buildModel()
+        self.batchSize=batchSize
+        self.minExp = minExp
+        #environment
+        self.environment = environment
+        #things that vary with time
         self.steps=0
+        self.epsilon=1
+        self.score=0 #last episode score
+        self.experience=[]
+        self.prevState=0#need to set manually at start of episode
 
         np.random.seed(5)
 
@@ -35,6 +45,8 @@ class NNAgent:
         with tf.name_scope("summaries"):
             score = tf.placeholder(tf.float32, name="score")
             tf.summary.scalar("score ", score)
+            eps = tf.placeholder(tf.float32, name="epsilon")
+            tf.summary.scalar("epsilon ", eps)
             tf.summary.scalar("cost", cost)
             for var in tf.trainable_variables():
                 tf.summary.histogram(var.name, var)
@@ -46,13 +58,13 @@ class NNAgent:
         summaryWriter = tf.summary.FileWriter("tensorboard/"+self.newTBDir(), graph=tf.get_default_graph())
 
         netDict = {"in": inputLayer, "out": layers[-1], "target": target,
-                   "score": score,
+                   "score": score, "epsilon": eps,
                    "optimizer": optimizer, "learningRate": learnRate,
                    "summaryWriter": summaryWriter, "summary": summary}
         return netDict
 
     def newTBDir(self):
-        "Produce name for new tensorboard run directory"
+        "Produce name for new tensorboard run directory (next run number)."
         files = os.listdir("tensorboard/")
         lastRunN=0
         for f in files:
@@ -60,18 +72,59 @@ class NNAgent:
                 lastRunN = int(f[-1])
         return "run"+str(int(lastRunN)+1)
 
-    def writeSummary(self, feedDict):
-        summaryString = self.session.run(self.netDict["summary"], feed_dict=feedDict)
-        self.netDict["summaryWriter"].add_summary(summaryString, self.steps)
-
     def action(self, observations):
         """
             Choose an action either from a random policy, or using neural net.
         """
         if np.random.random() < self.epsilon:
-            self.environment.action_space.sample()
+            action = self.environment.action_space.sample()
         else:
-            pass
+            action = self.session.run(self.netDict["out"],
+                             feed_dict={self.netDict["in"]: np.reshape(observations, (1,4))})
+        self.steps+=1
+        return action
+
+    def getBatch(self):
+        batchIn = []
+        actions = []
+        rewards = []
+        newStates = []
+        dones = []
+        sample = random.sample(self.experience, self.batchSize)
+        for s in sample:
+            batchIn.append(s[0])
+            actions.append(s[1])
+            rewards.append(s[2])
+            newStates.append(s[3])
+            dones.append(s[4])
+        #calculate targets
+        targets = self.session.run(self.netDict["out"], feed_dict={self.netDict["in"]: np.array(batchIn)})
+        for i in range(self.batchSize):
+            futureReward = self.session.run(self.netDict["out"], feed_dict={self.netDict["in"]: np.reshape(newStates[i], (1,4))})
+            targets[i, actions[i]] = rewards[i] + (not dones[i])*self.gamma*np.max(futureReward[0])
+        return batchIn, targets
+
+    def update(self, newState, action, reward, done):
+        """
+            Add experience to replay buffer, and train.
+        """
+        newState = np.array(newState)
+        self.experience.append([self.prevState, action, reward, newState, done])
+        self.prevState = newState
+        if self.steps > self.minExp :
+            batchIn, batchTargets = self.getBatch()
+            _, summary = self.session.run([self.netDict["optimizer"], self.netDict["summary"]],
+                                feed_dict={self.netDict["in"]: batchIn, self.netDict["target"]: batchTargets,
+                                           self.netDict["score"]: self.score, self.netDict["learningRate"]: self.learnRate,
+                                           self.netDict["epsilon"]: self.epsilon})
+            self.netDict["summaryWriter"].add_summary(summary, self.steps)
+            self.netDict["summaryWriter"].flush()
+
+    def reset(self):
+        """
+            Do things that need doing before the start of a new episode.
+        """
+        self.epsilon *= self.epsilonDecay
 
     def test(self):
         x = np.reshape(np.array([1,2,3,4]), (1,4))
@@ -82,6 +135,7 @@ class NNAgent:
         print(opt)
         self.netDict["summaryWriter"].add_summary(summaryString, self.steps)
         self.netDict["summaryWriter"].flush()
+
     def testNpSeed(self):
         for i in range(5):
             print(np.random.random())
