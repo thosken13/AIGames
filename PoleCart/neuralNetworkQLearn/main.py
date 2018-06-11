@@ -39,6 +39,7 @@ def playAndTrain(numEpisodes, render=False):
             if not done:
                 score+=1
         agent.score=score
+        agent.reset()
 
 
 
