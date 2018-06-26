@@ -18,28 +18,32 @@ def testAndExperiment():
     #     print(env.action_space.sample()) #spaces are seeded separately and apparently by a fixed seed
     agent = nnAgent.NNAgent(env)
     #agent.test()
-    # agent.testNpSeed()
+    agent.testNpSeed()
     print(agent.action([1,2,3,4]))
+
+def runEpisodes(numEpisodes, environment, agent, train, render):
+    for e in range(numEpisodes):
+        done=False
+        score=0
+        obs = environment.reset()
+        agent.prevState = np.array(obs)
+        while not done:
+            action = agent.action(obs)
+            obs, reward, done, info = environment.step(action)
+            if train:
+                agent.update(obs, action, reward, done)
+            if render:
+                environment.render()
+            if not done:
+                score+=1
+        agent.score=score
+        agent.reset()
 
 def playAndTrain(numEpisodes, render=False):
     env = gym.make('CartPole-v0')
     env.seed(0)
     agent = nnAgent.NNAgent(env)
-    for e in range(numEpisodes):
-        done=False
-        score=0
-        obs = env.reset()
-        agent.prevState = np.array(obs)
-        while not done:
-            action = agent.action(obs)
-            obs, reward, done, info = env.step(action)
-            agent.update(obs, action, reward, done)
-            if render:
-                env.render()
-            if not done:
-                score+=1
-        agent.score=score
-        agent.reset()
+    runEpisodes(numEpisodes, env, agent, True, render)
 
 
 
