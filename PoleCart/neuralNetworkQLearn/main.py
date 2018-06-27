@@ -21,7 +21,7 @@ def testAndExperiment():
     agent.testNpSeed()
     print(agent.action([1,2,3,4]))
 
-def runEpisodes(numEpisodes, environment, agent, train, render):
+def runEpisodes(numEpisodes, environment, agent, train, render, saveFreq):
     for e in range(numEpisodes):
         done=False
         score=0
@@ -36,16 +36,26 @@ def runEpisodes(numEpisodes, environment, agent, train, render):
                 environment.render()
             if not done:
                 score+=1
+        if saveFreq and (e+1)%saveFreq==0: #check saveFreq not None (no saving)
+            agent.save()
+            agent.restore()
         agent.score=score
         agent.reset()
 
-def playAndTrain(numEpisodes, render=False):
+def playAndTrain(numEpisodes, saveFreq=10, render=False, nHidd=[10,10,10]):
     env = gym.make('CartPole-v0')
     env.seed(0)
-    agent = nnAgent.NNAgent(env)
-    runEpisodes(numEpisodes, env, agent, True, render)
+    agent = nnAgent.NNAgent(env, nNeuronsHidLayers=nHidd)
+    runEpisodes(numEpisodes, env, agent, True, render, saveFreq)
+    agent.kill()
 
+def loopArchitecture():
+    for layers in range(1,6):
+        for nodesPerLayer in range(2,15):
+            playAndTrain(250, saveFreq=None, nHidd=[nodesPerLayer]*layers)
 
 
 #testAndExperiment()
-playAndTrain(1000)
+#playAndTrain(100)
+#playAndTrain(100, saveFreq=None)
+loopArchitecture()

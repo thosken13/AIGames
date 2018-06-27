@@ -7,7 +7,8 @@ import sys
 import pickle
 
 class NNAgent:
-    def __init__(self, environment, tensorboardDir="tensorboard/", modelsDir="models/", agentsDir="agents/", alpha=0.001, gamma=0.99, epsilonDecay=0.995,
+    def __init__(self, environment, tensorboardDir="tensorboard/", modelsDir="models/", agentsDir="agents/",
+                 alpha=0.001, gamma=0.99, epsilonDecay=0.995,
                  nNeuronsHidLayers=[10,10,10], batchSize=3, minExp=100):
         #RL parameters
         self.learnRate=alpha
@@ -160,7 +161,7 @@ class NNAgent:
             actionVals = self.session.run(self.netDict["out"],
                              feed_dict={self.netDict["in"]: np.reshape(observations, (1,4))})
             action = np.argmax(actionVals)
-            #print(actionVals, action)
+            print(actionVals, action)
         self.steps+=1
         return action
 
