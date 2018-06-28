@@ -30,13 +30,13 @@ def getRefObs():
         obs, r, d, i = env.step(env.action_space.sample())
         print(obs)
 
-def runEpisode(environment, agent, train, validate, render):
+def runEpisode(environment, agent, train, render):
     done=False
     score=0
     obs = environment.reset()
     agent.prevState = np.array(obs)
     while not done:
-        action = agent.action(obs, validate)
+        action = agent.action(obs)
         obs, reward, done, info = environment.step(action)
         if train:
             agent.update(obs, action, reward, done)
@@ -46,11 +46,14 @@ def runEpisode(environment, agent, train, validate, render):
             score+=1
     return score
 
-def runEpisodes(numEpisodes, environment, agent, train, validate, render, saveFreq):
+def runEpisodes(numEpisodes, environment, agent, train, render, saveFreq):
     for e in range(numEpisodes):
-        runEpisode(environment, agent, train, False, render)
-        if validate:
-            score = runEpisode(environment, agent, False, False, render)
+        runEpisode(environment, agent, train, render)
+        if (e+1)%validationFreq == 0:
+            epsilon = agent.epsilon
+            agent.epsilon = 0
+            score = runEpisode(environment, agent, False, False)
+            agent.epsilon = epsilon
             agent.score=score
         if saveFreq and (e+1)%saveFreq==0: #check saveFreq not None (no saving)
             agent.save()
@@ -61,7 +64,7 @@ def playAndTrain(numEpisodes, saveFreq=10, render=False, nHidd=[10,10,10]):
     env = gym.make('CartPole-v0')
     env.seed(0)
     agent = nnAgent.NNAgent(env, nNeuronsHidLayers=nHidd, alpha=0.005, epsilonDecay=0.99, batchSize=16)
-    runEpisodes(numEpisodes, env, agent, True, True, render, saveFreq)
+    runEpisodes(numEpisodes, env, agent, True, render, saveFreq)
     agent.kill()
 
 def loopArchitecture():
@@ -69,6 +72,8 @@ def loopArchitecture():
         for nodesPerLayer in range(2,15):
             playAndTrain(400, saveFreq=None, nHidd=[nodesPerLayer]*layers)
 
+
+validationFreq=10
 
 #testAndExperiment()
 #getRefObs()
