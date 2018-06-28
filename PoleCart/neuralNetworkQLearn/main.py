@@ -48,9 +48,9 @@ def runEpisode(environment, agent, train, validate, render):
 
 def runEpisodes(numEpisodes, environment, agent, train, validate, render, saveFreq):
     for e in range(numEpisodes):
-        runEpisode(environment, agent, train, render)
+        runEpisode(environment, agent, train, False, render)
         if validate:
-            score = runEpisode(environment, agent, False, False)
+            score = runEpisode(environment, agent, False, False, render)
             agent.score=score
         if saveFreq and (e+1)%saveFreq==0: #check saveFreq not None (no saving)
             agent.save()
