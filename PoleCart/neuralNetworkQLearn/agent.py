@@ -8,12 +8,13 @@ import pickle
 
 class NNAgent:
     def __init__(self, environment, tensorboardDir="tensorboard/", modelsDir="models/", agentsDir="agents/",
-                 alpha=0.001, gamma=0.99, epsilonDecay=0.995,
-                 nNeuronsHidLayers=[10,10,10], batchSize=3, minExp=100):
+                 alpha=0.001, gamma=0.99, epsilonDecay=0.99, minEpsilon=0.1,
+                 nNeuronsHidLayers=[10,10,10], batchSize=6, minExp=100):
         #RL parameters
         self.learnRate=alpha
         self.gamma=gamma
         self.epsilonDecay=epsilonDecay
+        self.minEpsilon=minEpsilon
         #model and training stuff
         self.nNeuronsHidLayers = nNeuronsHidLayers
         self.tensorboardDir=tensorboardDir
@@ -61,6 +62,19 @@ class NNAgent:
             tf.summary.scalar("cost", cost)
             for var in tf.trainable_variables():
                 tf.summary.histogram(var.name, var)
+        with tf.name_scope("referenceActionValues"):
+            referenceObsUpL = tf.placeholder(tf.float32, name="referenceObsUpL")
+            tf.summary.scalar("referenceObsUpL", referenceObsUpL)
+            referenceObsFallL = tf.placeholder(tf.float32, name="referenceObsFallL")
+            tf.summary.scalar("referenceObsFallL", referenceObsFallL)
+            referenceObsRiseL = tf.placeholder(tf.float32, name="referenceObsRiseL")
+            tf.summary.scalar("referenceObsRiseL", referenceObsRiseL)
+            referenceObsUpR = tf.placeholder(tf.float32, name="referenceObsUpR")
+            tf.summary.scalar("referenceObsUpR", referenceObsUpR)
+            referenceObsFallR = tf.placeholder(tf.float32, name="referenceObsFallR")
+            tf.summary.scalar("referenceObsFallR", referenceObsFallR)
+            referenceObsRiseR = tf.placeholder(tf.float32, name="referenceObsRiseR")
+            tf.summary.scalar("referenceObsRiseR", referenceObsRiseR)
         summary = tf.summary.merge_all()
 
         saver = tf.train.Saver()
@@ -72,6 +86,9 @@ class NNAgent:
 
         netDict = {"in": inputLayer, "out": layers[-1], "target": target,
                    "score": score, "epsilon": eps, "episodes": episodes,
+                   "refObsUpL": referenceObsUpL, "refObsFallL": referenceObsFallL,
+                   "refObsRiseL": referenceObsRiseL, "refObsUpR": referenceObsUpR,
+                   "refObsFallR": referenceObsFallR, "refObsRiseR": referenceObsRiseR,
                    "optimizer": optimizer, "learningRate": learnRate,
                    "summaryWriter": summaryWriter, "summary": summary,
                    "saver": saver}
@@ -142,6 +159,12 @@ class NNAgent:
         self.netDict["out"] = graph.get_tensor_by_name("nn/out/BiasAdd:0")
         self.netDict["target"] = graph.get_tensor_by_name("optimizer/target:0")
         self.netDict["score"] = graph.get_tensor_by_name("summaries/score:0")
+        self.netDict["refObsUpL"] = graph.get_tensor_by_name("referenceActionValues/referenceObsUpL:0")
+        self.netDict["refObsFallL"] = graph.get_tensor_by_name("referenceActionValues/referenceObsFallL:0")
+        self.netDict["refObsRiseL"] = graph.get_tensor_by_name("referenceActionValues/referenceObsRiseL:0")
+        self.netDict["refObsUpR"] = graph.get_tensor_by_name("referenceActionValues/referenceObsUpR:0")
+        self.netDict["refObsFallR"] = graph.get_tensor_by_name("referenceActionValues/referenceObsFallR:0")
+        self.netDict["refObsRiseR"] = graph.get_tensor_by_name("referenceActionValues/referenceObsRiseR:0")
         self.netDict["epsilon"] = graph.get_tensor_by_name("summaries/epsilon:0")
         self.netDict["episodes"] = graph.get_tensor_by_name("summaries/episodes:0")
         self.netDict["optimizer"] = graph.get_operation_by_name("optimizer/adamOpt")
@@ -189,14 +212,24 @@ class NNAgent:
         """
             Add experience to replay buffer, and train.
         """
+        #pass experience to memory
         newState = np.array(newState)
         self.experience.append([self.prevState, action, reward, newState, done])
         self.prevState = newState
         if self.steps > self.minExp :
+            #to follow the results for fixed inputs
+            refObs = np.array([[0, 0, 0, 0],
+                               [0, 0, 0.05, 1],
+                               [0, 0, 0.05, -1]])
+            refOut = self.session.run(self.netDict["out"],
+                             feed_dict={self.netDict["in"]: refObs})
+            #get batch and train
             batchIn, batchTargets = self.getBatch()
             _, summary = self.session.run([self.netDict["optimizer"], self.netDict["summary"]],
                                 feed_dict={self.netDict["in"]: batchIn, self.netDict["target"]: batchTargets,
                                            self.netDict["score"]: self.score, self.netDict["learningRate"]: self.learnRate,
+                                           self.netDict["refObsUpL"]: refOut[0,0], self.netDict["refObsFallL"]: refOut[1,0], self.netDict["refObsRiseL"]: refOut[2,0],
+                                           self.netDict["refObsUpR"]: refOut[0,1], self.netDict["refObsFallR"]: refOut[1,1], self.netDict["refObsRiseR"]: refOut[2,1],
                                            self.netDict["epsilon"]: self.epsilon, self.netDict["episodes"]: self.episodes})
             self.netDict["summaryWriter"].add_summary(summary, self.steps)
             self.netDict["summaryWriter"].flush()
@@ -205,7 +238,7 @@ class NNAgent:
         """
             Do things that need doing before the start of a new episode.
         """
-        self.epsilon *= self.epsilonDecay
+        self.epsilon = max([self.epsilon*self.epsilonDecay, self.minEpsilon])
         self.episodes+=1
 
     def kill(self):
