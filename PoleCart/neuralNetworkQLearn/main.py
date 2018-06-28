@@ -30,13 +30,13 @@ def getRefObs():
         obs, r, d, i = env.step(env.action_space.sample())
         print(obs)
 
-def runEpisode(environment, agent, train, render):
+def runEpisode(environment, agent, train, validate, render):
     done=False
     score=0
     obs = environment.reset()
     agent.prevState = np.array(obs)
     while not done:
-        action = agent.action(obs)
+        action = agent.action(obs, validate)
         obs, reward, done, info = environment.step(action)
         if train:
             agent.update(obs, action, reward, done)
@@ -50,10 +50,7 @@ def runEpisodes(numEpisodes, environment, agent, train, validate, render, saveFr
     for e in range(numEpisodes):
         runEpisode(environment, agent, train, render)
         if validate:
-            epsilon = agent.epsilon
-            agent.epsilon = 0
             score = runEpisode(environment, agent, False, False)
-            agent.epsilon = epsilon
             agent.score=score
         if saveFreq and (e+1)%saveFreq==0: #check saveFreq not None (no saving)
             agent.save()

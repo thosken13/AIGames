@@ -174,18 +174,17 @@ class NNAgent:
         self.netDict["saver"] = saver
         print("Restored")
 
-    def action(self, observations):
+    def action(self, observations, validate):
         """
             Choose an action either from a random policy, or using neural net.
         """
-        if np.random.random() < self.epsilon:
-            action = self.environment.action_space.sample()
-        else:
+        if validate or np.random.random() > self.epsilon:
             actionVals = self.session.run(self.netDict["out"],
                              feed_dict={self.netDict["in"]: np.reshape(observations, (1,4))})
             action = np.argmax(actionVals)
             print(actionVals, action)
-        self.steps+=1
+        else:
+            action = self.environment.action_space.sample()
         return action
 
     def getBatch(self):
@@ -233,6 +232,7 @@ class NNAgent:
                                            self.netDict["epsilon"]: self.epsilon, self.netDict["episodes"]: self.episodes})
             self.netDict["summaryWriter"].add_summary(summary, self.steps)
             self.netDict["summaryWriter"].flush()
+        self.steps+=1
 
     def reset(self):
         """
