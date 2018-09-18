@@ -1,0 +1,2 @@
+Lower gamma (e.g 0.9) learns hovering since ins't as affected by positive rewards for landing.
+Higher gamma (e.g 0.99) puts more importance on landing

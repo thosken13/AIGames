@@ -1,0 +1,11 @@
+To do:
+-tensorboard: -100 ep average for training
+              -number of solves (score >= 200)
+-histogram observations and rewards (pass an array of rolling window of obs, rewards to summary histogram)
+-check if need to standardize ^ ^
+-test l2 reg vs no l2 reg, hubert vs mse, relu vs leaky relu
+-multiple optimization steps in each update call
+-if a transition gives a positive reward, replcate it multiple times in eperience replay
+-prioritised exo replay - make (github?) a well made class
+
+-Actor Critic
