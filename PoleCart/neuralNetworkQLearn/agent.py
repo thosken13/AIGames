@@ -184,7 +184,7 @@ class NNAgent:
             actionVals = self.session.run(self.netDict["out"],
                              feed_dict={self.netDict["in"]: np.reshape(observations, (1,4))})
             action = np.argmax(actionVals)
-            print(actionVals, action)
+            #print(actionVals, action)
         self.steps+=1
         return action
 

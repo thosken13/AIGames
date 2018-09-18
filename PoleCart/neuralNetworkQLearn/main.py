@@ -46,37 +46,54 @@ def runEpisode(environment, agent, train, render):
             score+=1
     return score
 
-def runEpisodes(numEpisodes, environment, agent, train, render, saveFreq):
+def runEpisodes(numEpisodes, environment, agent, train, render, saveFreq, solveStop=False):
     for e in range(numEpisodes):
-        runEpisode(environment, agent, train, render)
-        if (e+1)%validationFreq == 0:
+        print("Episode No.: {}".format(e), "Episode Length: ", runEpisode(environment, agent, train, render))
+        if (e+1)%validationFreq == 0: #do a validation step
             epsilon = agent.epsilon
             agent.epsilon = 0
-            score = runEpisode(environment, agent, False, False)
-            agent.epsilon = epsilon
+            score=0
+            for i in range(nValEps):
+                score += runEpisode(environment, agent, False, False)
+            score /= nValEps
             agent.score=score
+            agent.epsilon = epsilon
+            print("Vaidation score: {}".format(agent.score))
         if saveFreq and (e+1)%saveFreq==0: #check saveFreq not None (no saving)
             agent.save()
             agent.restore()
+        if solveStop and agent.score > 190:
+            print("Solved in {} episodes!".format(e+1))
+            return
         agent.reset()
 
-def playAndTrain(numEpisodes, saveFreq=10, render=False, nHidd=[10,10,10]):
+def playAndTrain(numEpisodes, saveFreq=10, render=False, nHidd=[10,10,10], solveStop=False):
     env = gym.make('CartPole-v0')
     env.seed(0)
-    agent = nnAgent.NNAgent(env, nNeuronsHidLayers=nHidd, alpha=0.005, epsilonDecay=0.99, batchSize=16)
-    runEpisodes(numEpisodes, env, agent, True, render, saveFreq)
+    agent = nnAgent.NNAgent(env, nNeuronsHidLayers=nHidd, alpha=0.001, epsilonDecay=0.99, batchSize=16)
+    runEpisodes(numEpisodes, env, agent, True, render, saveFreq, solveStop=solveStop)
     agent.kill()
 
-def loopArchitecture():
-    for layers in range(1,6):
-        for nodesPerLayer in range(2,15):
-            playAndTrain(400, saveFreq=None, nHidd=[nodesPerLayer]*layers)
+def randomPlay(numEpisodes, render=False):
+    env = gym.make('CartPole-v0')
+    env.seed(0)
+    agent = nnAgent.NNAgent(env)
+    agent.minEpsilon = 1
+    runEpisodes(numEpisodes, env, agent, True, render, None)
+    agent.kill()
+
+def loopArchitecture(numEpisodes):
+    randomPlay(numEpisodes)
+    for layers in range(2,6):
+        for nodesPerLayer in reversed(range(2,15)):
+            playAndTrain(numEpisodes, saveFreq=None, nHidd=[nodesPerLayer]*layers, solveStop=True)
 
 
 validationFreq=10
+nValEps=10 #number of validation episodes to calculate score
 
 #testAndExperiment()
 #getRefObs()
 #playAndTrain(300)
-playAndTrain(300, saveFreq=None)
-#loopArchitecture()
+#playAndTrain(300, saveFreq=None)
+loopArchitecture(400)

@@ -1,0 +1,15 @@
+Features:
+-rewrite/sort playAndTrain runEpisodes etc. functions so that work is split sensibly
+-for validation step do mutiple episodes and take average score to put in tb
+-dropout (low) and batch normalization
+
+Test different models:
+-try stepping learning rate?
+-try different losses
+-Run over a number of model parameters (layers, nodes, learning rate, ...)
+-run over a number of rl parameters (gamma, epsilon schedule, ...)
+
+In new agent
+-target network?
+-curiosity based exploration
+-try a model based version of rl
